@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Production & test builds
+dist/
+dist-test/
+.vercel/
+
+# Test output & reports
+test-results/
+playwright-report/
+.playwright-mcp/
+blob-report/
+
+# Logs & temp
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
+!.env.example
