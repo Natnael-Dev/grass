@@ -4,7 +4,7 @@ MODE: strict
 
 <!-- strict = agent stops at every human gate and waits. trust = agent merges after automated gates and continues. -->
 
-Repo: (human fills: https://github.com/<user>/<repo>  — or tell the agent in chat. If empty, the agent asks once at M0.)
+Repo: https://github.com/Natnael-Dev/grass
 
 ## Approvals
 | Gate | Status | Date | Notes |
