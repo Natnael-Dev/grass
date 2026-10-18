@@ -20,6 +20,7 @@ console.log('Asset Gzip Size Check:');
 console.log('--------------------------------------------------');
 
 for (const file of files) {
+  if (file.endsWith('.map')) continue;
   const filePath = path.join(DIST_DIR, file);
   const content = fs.readFileSync(filePath);
   const gzipped = zlib.gzipSync(content);

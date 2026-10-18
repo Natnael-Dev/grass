@@ -55,6 +55,10 @@ export class CameraRig {
     this.camera.updateProjectionMatrix();
   }
 
+  public onResize(aspect: number): void {
+    this.setAspect(aspect);
+  }
+
   public setParallaxTarget(x: number, y: number): void {
     this.parallaxTargetX = Math.max(-1, Math.min(1, x));
     this.parallaxTargetY = Math.max(-1, Math.min(1, y));
