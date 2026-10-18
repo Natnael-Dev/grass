@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
 import { TerrainMesh } from '../../src/world/TerrainMesh';
 import { Ridges } from '../../src/world/Ridges';
+import { Tree } from '../../src/world/Tree';
 import { terrainHeight } from '../../src/world/terrain';
 
 describe('TerrainMesh', () => {
@@ -57,5 +58,31 @@ describe('Ridges', () => {
     });
 
     expect(() => ridges.dispose()).not.toThrow();
+  });
+});
+
+describe('Tree', () => {
+  it('places a low-poly silhouette tree with vertex colors at TREE_COORDS', () => {
+    const tree = new Tree();
+    expect(tree.mesh).toBeInstanceOf(THREE.Mesh);
+
+    // Tree coordinates on the hill crest
+    expect(tree.mesh.position.x).toBe(6);
+    expect(tree.mesh.position.z).toBe(-26);
+    expect(tree.mesh.position.y).toBeCloseTo(terrainHeight(6, -26), 4);
+
+    // Merged geometry contains vertex positions, normals, and colors
+    const pos = tree.geometry.attributes.position;
+    expect(pos).toBeDefined();
+    if (!pos) throw new Error('Missing position attribute on tree');
+    expect(tree.geometry.attributes.normal).toBeDefined();
+    expect(tree.geometry.attributes.color).toBeDefined();
+    expect(pos.count).toBeGreaterThan(200);
+
+    // Update time for wind sway
+    tree.update(2.5);
+    expect(tree.uTime.value).toBe(2.5);
+
+    expect(() => tree.dispose()).not.toThrow();
   });
 });
