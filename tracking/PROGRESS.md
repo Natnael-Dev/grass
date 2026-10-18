@@ -1,14 +1,14 @@
 # PROGRESS — the agent's live log (update after EVERY task and gate)
 
-**Current milestone:** M0 (in-progress)
-**Current state:** in-progress
-**Last updated:** 2026-10-18 23:55
+**Current milestone:** M1 (not started)
+**Current state:** not-started
+**Last updated:** 2026-10-18 23:59
 **Open blockers:** none
 
 ## Milestone checklist
 Mark `[x]` only when the gate passed AND evidence exists AND (strict mode) the human approved.
 
-- [ ] M0 Capability discovery, repo + GitHub bootstrap — evidence: tracking/evidence/M0/
+- [x] M0 Capability discovery, repo + GitHub bootstrap — evidence: tracking/evidence/M0/
 - [ ] M1 Tooling scaffold, CI, hooks — evidence: tracking/evidence/M1/
 - [ ] M2 Render core (G1) — evidence: tracking/evidence/M2/
 - [ ] M3 Grass + wind (G2)
@@ -25,12 +25,14 @@ Mark `[x]` only when the gate passed AND evidence exists AND (strict mode) the h
 
 ## Task log (append-only; newest at bottom)
 Format: `YYYY-MM-DD HH:MM | Mx | task | result | commit-sha | evidence-path`
+2026-10-18 23:55 | M0 | capability discovery, repo bootstrap, ADR-010 | pass | 54326be | tracking/evidence/M0/README.md
 
 ## Attempt log (for failing checks; max 3 per check)
 Format: `Mx | check | attempt # | hypothesis | change | result`
 
 ## Agent-proposed decisions (see ADR file)
 Format: `ADR-nnn | summary | needs-human? y/n | status`
+ADR-010 | Dependency versions verified via npm & Three.js color management rules | n | agent-proposed
 
 ## Spec issues found (conflicts/ambiguities in docs)
 Format: `doc | issue | resolution`
