@@ -61,7 +61,7 @@ export class Sky {
       .set(
         Math.cos(elevRad) * Math.sin(azRad),
         Math.sin(elevRad),
-        Math.cos(elevRad) * Math.cos(azRad),
+        -Math.cos(elevRad) * Math.cos(azRad),
       )
       .normalize();
   }
