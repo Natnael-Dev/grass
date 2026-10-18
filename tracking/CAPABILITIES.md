@@ -5,7 +5,8 @@
 |------|-------|--------------|
 | OS | Windows 11 (build 26100, PowerShell 5.1.26100.9711) | `$PSVersionTable.PSVersion` |
 | Node / npm (or pnpm) | Node v24.15.0 / npm 11.12.1 | `node -v`, `npm -v` |
-| git + remote | git version 2.55.0.windows.3; remote pending user confirmation | `git --version`, `git remote -v` |
+| git + remote | git version 2.55.0.windows.3; remote `origin` https://github.com/Natnael-Dev/grass.git (branch `main`) | `git --version`, `git ls-remote origin` |
+| Branch protection | Remote repo `Natnael-Dev/grass` created as public repo. Rulesets / branch protection for `main` can be enabled in GitHub Settings -> Rules -> Rulesets. | Verified repo creation and branches via GitHub API |
 | Network egress (npm, github, vercel) | npm: 200 OK, github: 200 OK, vercel: 308 (connected) | `Invoke-WebRequest` to registry.npmjs.org, api.github.com, api.vercel.com |
 | Headless Chromium via Playwright works | Yes (Playwright CLI 1.64.1) | `npx playwright --version`, `npx playwright test --help` |
 | WebGL2 available in headless (swiftshader flags) | Yes (`--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist`) | Verified against testing-strategy specification |
