@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <title>404: grass not found</title>
+    <meta name="theme-color" content="#101b4a" />
+    <style>
+      :root {
+        --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+        --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        --text: #f4f1e8;
+        --text-muted: #cfcdc2;
+        --accent: #c5f277;
+        --accent-ink: #10200c;
+        --panel: rgba(10, 14, 28, 0.58);
+        --panel-solid: rgba(10, 14, 28, 0.88);
+        --panel-border: rgba(255, 255, 255, 0.16);
+        --focus: #ffe08a;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        background-color: #0c142b;
+        color: var(--text);
+        font-family: var(--font-ui);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        text-align: center;
+      }
+      .error-card {
+        max-width: 440px;
+        width: 100%;
+        background: var(--panel-solid);
+        border: 1px solid var(--panel-border);
+        border-radius: 14px;
+        padding: 32px 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      }
+      @supports (backdrop-filter: blur(12px)) {
+        .error-card {
+          background: var(--panel);
+          backdrop-filter: blur(12px);
+        }
+      }
+      h1 {
+        font-family: var(--font-mono);
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--text);
+        margin: 0;
+      }
+      p {
+        font-size: 15px;
+        color: var(--text-muted);
+        line-height: 1.5;
+        margin: 0;
+      }
+      a {
+        margin-top: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 40px;
+        padding: 0 20px;
+        border-radius: 999px;
+        background: var(--accent);
+        color: var(--accent-ink);
+        font-family: var(--font-mono);
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        transition:
+          transform 160ms ease,
+          background-color 160ms ease;
+      }
+      a:hover {
+        transform: translateY(-1px);
+        background-color: #d2f78e;
+      }
+      a:active {
+        transform: scale(0.97);
+      }
+      a:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="error-card">
+      <h1>404: grass not found</h1>
+      <p>this patch of the internet doesn't exist.</p>
+      <a href="/">go back outside</a>
+    </main>
+  </body>
+</html>

@@ -1,3 +1,4 @@
+import './ui/styles/tokens.css';
 import { App } from './app/App';
 import type { MoodName, QualityTier } from './app/flags';
 import type { AppState } from './app/store';
@@ -19,10 +20,18 @@ export interface GrassDebugApi {
   advanceIdle: (seconds: number) => void;
   freeze: (on: boolean) => void;
   step: (dt: number) => void;
-  enter: () => void;
+  enter: (viaKeyboard?: boolean) => void;
   spawnSeeds: (x?: number, z?: number) => void;
   getSeedsCount: () => number;
   getFirefliesCount: () => number;
+  openHelp: () => void;
+  closeHelp: () => void;
+  showHint: (text: string) => void;
+  getUptime: () => number;
+  setUptime: (seconds: number) => void;
+  triggerExit: () => void;
+  isHelpOpen: () => boolean;
+  isExitOpen: () => boolean;
 }
 
 declare global {
@@ -31,27 +40,12 @@ declare global {
   }
 }
 
-console.info(
-  "%c  \\|/\n  \\|/\n~~~~~\nhey dev. you opened devtools on a grass website.\ngo touch some actual grass sometime. we'll be here.",
-  'color: #a8d878; font-family: monospace; font-size: 12px; font-weight: bold;',
-);
-
 function boot(): void {
   try {
     const app = new App();
     app.boot();
 
-    const enterBtn = document.getElementById('btn-enter') as HTMLButtonElement | null;
-    const overlay = document.getElementById('entry-overlay');
-
-    if (enterBtn && overlay) {
-      enterBtn.addEventListener('click', () => {
-        app.enter();
-        overlay.classList.add('hidden');
-      });
-    }
-
-    // Expose dev/test hooks only in DEV or when explicitly enabled
+    // Expose dev/test hooks in DEV or when explicitly enabled
     if (import.meta.env.DEV || import.meta.env.VITE_EXPOSE_DEBUG === '1' || app.flags.debug) {
       window.__grass = {
         app,
@@ -78,15 +72,32 @@ function boot(): void {
         step: (dt: number) => {
           app.step(dt);
         },
-        enter: () => {
-          app.enter();
-          overlay?.classList.add('hidden');
+        enter: (viaKeyboard = false) => {
+          app.enter(viaKeyboard);
         },
         spawnSeeds: (x?: number, z?: number) => {
           app.spawnSeeds(x, z);
         },
         getSeedsCount: () => app.getSeedsCount(),
         getFirefliesCount: () => app.getFirefliesCount(),
+        openHelp: () => {
+          app.openHelp();
+        },
+        closeHelp: () => {
+          app.closeHelp();
+        },
+        showHint: (text: string) => {
+          app.hintLine.show(text);
+        },
+        getUptime: () => app.hud.uptime.getSeconds(),
+        setUptime: (seconds: number) => {
+          app.hud.uptime.setSeconds(seconds);
+        },
+        triggerExit: () => {
+          app.triggerExit();
+        },
+        isHelpOpen: () => app.howItWorks.getIsOpen(),
+        isExitOpen: () => app.exitScreen.getIsOpen(),
       };
     }
   } catch (error) {

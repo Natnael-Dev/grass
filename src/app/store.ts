@@ -1,6 +1,6 @@
 import type { MoodName, QualityTier } from './flags';
 
-export type AppPhase = 'init' | 'ready' | 'running' | 'paused' | 'exit';
+export type AppPhase = 'init' | 'ready' | 'running' | 'paused' | 'exit' | 'exited';
 
 export interface AppState {
   phase: AppPhase;

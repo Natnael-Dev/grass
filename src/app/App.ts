@@ -19,6 +19,14 @@ import { KeyboardBrush } from '../input/KeyboardBrush';
 import { GestureClassifier } from '../input/GestureClassifier';
 import { HandCursor } from '../ui/HandCursor';
 import { Vignette } from '../ui/Vignette';
+import { HintLine } from '../ui/HintLine';
+import { HintSequencer } from '../ui/HintSequencer';
+import { Hud } from '../ui/Hud';
+import { HowItWorks } from '../ui/HowItWorks';
+import { ExitScreen } from '../ui/ExitScreen';
+import { EasterEggs } from '../easter/eggs';
+import { Entry } from '../ui/Entry';
+import { safeStorage } from '../core/storage';
 import { parseFlags, type AppFlags, type QualityTier, type MoodName } from './flags';
 import { detectCapabilities, type Capabilities } from './capabilities';
 import { Store } from './store';
@@ -58,6 +66,15 @@ export class App {
   public readonly handCursor: HandCursor;
   public readonly vignette: Vignette;
 
+  // UI & Easter egg systems
+  public readonly hintLine: HintLine;
+  public readonly hintSequencer: HintSequencer;
+  public readonly hud: Hud;
+  public readonly howItWorks: HowItWorks;
+  public readonly exitScreen: ExitScreen;
+  public readonly easterEggs: EasterEggs;
+  public readonly entryScreen: Entry;
+
   // Idle tracking
   private idleInactivityTimer = 0;
   public ee2Triggered = false;
@@ -81,7 +98,11 @@ export class App {
     this.flags = options.flags ?? parseFlags();
     this.capabilities = detectCapabilities(this.flags.quality);
 
-    const initialMood = this.flags.mood ?? getDefaultMood();
+    const savedMood = safeStorage.getSavedMood();
+    const initialMood = this.flags.mood ?? savedMood ?? getDefaultMood();
+    const savedMuted = safeStorage.getSavedMuted();
+    const hintsSeen = safeStorage.getHintsSeen();
+
     this.moodController = new MoodController(initialMood);
     this.moodController.onMoodChange = (mood) => {
       this.store.setState({ mood, targetMood: mood });
@@ -94,6 +115,8 @@ export class App {
       isTouch: this.capabilities.isTouch,
       mood: initialMood,
       targetMood: initialMood,
+      muted: savedMuted,
+      hintsSeen,
     });
 
     if (options.canvas) {
@@ -146,6 +169,69 @@ export class App {
       reducedMotion: this.capabilities.reducedMotion,
     });
 
+    // UI & Easter eggs initialization
+    this.hintLine = new HintLine({
+      reducedMotion: this.capabilities.reducedMotion,
+    });
+
+    this.hintSequencer = new HintSequencer({
+      hintLine: this.hintLine,
+      isTouch: this.capabilities.isTouch,
+      hintsSeen,
+      onComplete: () => {
+        this.store.setState({ hintsSeen: true });
+      },
+    });
+
+    this.howItWorks = new HowItWorks({
+      onClose: () => {
+        this.store.setState({ helpOpen: false });
+      },
+    });
+
+    this.exitScreen = new ExitScreen({
+      onRerun: () => {
+        this.store.setState({ phase: 'running' });
+      },
+    });
+
+    this.easterEggs = new EasterEggs({
+      hintLine: this.hintLine,
+      onExitTriggered: () => {
+        this.triggerExit();
+      },
+      isHelpOpen: () => this.howItWorks.getIsOpen(),
+    });
+    EasterEggs.logConsoleGreeting();
+
+    this.hud = new Hud({
+      initialMood,
+      initialMuted: savedMuted,
+      onMoodChange: (m) => {
+        this.setMood(m);
+        safeStorage.setSavedMood(m);
+      },
+      onMuteToggle: (muted) => {
+        this.setMuted(muted);
+        safeStorage.setSavedMuted(muted);
+      },
+      onOpenHelp: () => {
+        this.openHelp();
+      },
+      onUptimeMilestone3: () => {
+        this.easterEggs.onUptime3Min();
+      },
+      onUptimeMilestone10: () => {
+        this.easterEggs.onUptime10Min();
+      },
+    });
+
+    this.entryScreen = new Entry({
+      onEnter: ({ viaKeyboard }) => {
+        this.enter(viaKeyboard);
+      },
+    });
+
     // Initial mood setup across all world systems
     this.applyCurrentMood();
 
@@ -168,22 +254,25 @@ export class App {
 
     this.gestureClassifier.on('holdEnd', () => {
       this.setLying(false);
+      this.hintSequencer.onLieDownEnd();
     });
 
     this.gestureClassifier.on('ee2Trigger', () => {
       this.ee2Triggered = true;
-      console.info('> fatal: no merge conflicts in this meadow.');
+      this.easterEggs.onHold10s();
     });
 
-    // Wire Pointer events into GestureClassifier and idle tracker
+    // Wire Pointer events into GestureClassifier, HUD activity and idle tracker
     this.pointer.onDown = (x, y) => {
       this.resetIdle();
       this.gestureClassifier.onPointerDown(x, y);
+      this.hud.onPointerSceneActivity();
     };
 
     this.pointer.onMove = (x, y) => {
       this.resetIdle();
       this.gestureClassifier.onPointerMove(x, y);
+      this.hud.onPointerSceneActivity();
     };
 
     this.pointer.onUp = (x, y) => {
@@ -193,6 +282,10 @@ export class App {
     this.pointer.onCancel = () => {
       this.gestureClassifier.onPointerCancel();
     };
+
+    this.canvas.addEventListener('pointerleave', () => {
+      this.hud.onPointerLeaveScene();
+    });
 
     if (this.flags.debug) {
       this.statsOverlay = new StatsOverlay();
@@ -232,14 +325,52 @@ export class App {
           return;
         }
 
+        if (this.easterEggs.onKeyDown(e)) {
+          return;
+        }
+
+        if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
+          if (this.howItWorks.getIsOpen()) {
+            this.closeHelp();
+          } else {
+            this.openHelp();
+          }
+          return;
+        }
+
+        if (e.key === 'Escape') {
+          if (this.howItWorks.getIsOpen()) {
+            this.closeHelp();
+            return;
+          }
+          if (this.exitScreen.getIsOpen()) {
+            this.exitScreen.hide();
+            this.store.setState({ phase: 'running' });
+            return;
+          }
+        }
+
+        if (e.key.toLowerCase() === 'm') {
+          this.toggleMute();
+          return;
+        }
+
         this.gestureClassifier.onKeyDown(e);
 
         if (e.key === '1') {
           this.setMood('dawn');
+          safeStorage.setSavedMood('dawn');
+          this.hud.moodSwitch.setMood('dawn');
         } else if (e.key === '2') {
           this.setMood('golden');
+          safeStorage.setSavedMood('golden');
+          this.hud.moodSwitch.setMood('golden');
         } else if (e.key === '3') {
           this.setMood('night');
+          safeStorage.setSavedMood('night');
+          this.hud.moodSwitch.setMood('night');
+        } else if (e.key === 'Enter') {
+          this.spawnSeeds();
         }
       };
 
@@ -254,6 +385,9 @@ export class App {
       this.visibilityHandler = () => {
         if (typeof document !== 'undefined' && document.hidden) {
           this.gestureClassifier.reset();
+          this.hud.uptime.pause();
+        } else if (typeof document !== 'undefined' && !document.hidden) {
+          this.hud.uptime.resume();
         }
       };
 
@@ -280,6 +414,9 @@ export class App {
       this.idleInactivityTimer += dt;
       if (this.idleInactivityTimer >= 25.0) {
         this.cameraRig.setIdle(true);
+      }
+      if (this.idleInactivityTimer >= 40.0) {
+        this.hintSequencer.onIdle40s();
       }
 
       // 2. Parallax Target from Pointer NDC
@@ -334,6 +471,10 @@ export class App {
       } else {
         if (this.pointer.state.deltaX !== 0 || this.pointer.state.deltaY !== 0) {
           this.keyboardBrush.deactivate();
+          const distPx = Math.hypot(this.pointer.state.deltaX, this.pointer.state.deltaY);
+          if (distPx > 0) {
+            this.hintSequencer.onBrush(distPx);
+          }
         }
 
         groundHit = this.groundRaycaster.intersect(
@@ -414,11 +555,20 @@ export class App {
   public boot(): void {
     this.loop.start();
     this.store.setState({ phase: 'ready' });
+    this.entryScreen.setReady();
   }
 
-  public enter(): void {
+  public enter(viaKeyboard = false): void {
     this.cameraRig.startEntry();
     this.store.setState({ phase: 'running' });
+    this.hintSequencer.start();
+    this.hud.uptime.start();
+    this.entryScreen.triggerEnter(viaKeyboard);
+    if (viaKeyboard) {
+      setTimeout(() => {
+        this.hud.helpButton.focus();
+      }, 950);
+    }
   }
 
   public setQuality(tier: QualityTier): void {
@@ -431,14 +581,43 @@ export class App {
   public setMood(mood: MoodName, immediate = false): void {
     this.store.setState({ targetMood: mood });
     this.moodController.setMood(mood, immediate);
+    this.hud.moodSwitch.setMood(mood);
+    safeStorage.setSavedMood(mood);
     if (immediate) {
       this.store.setState({ mood });
       this.applyCurrentMood();
     }
   }
 
+  public setMuted(muted: boolean): void {
+    this.store.setState({ muted });
+    this.hud.soundToggle.setMuted(muted);
+    safeStorage.setSavedMuted(muted);
+  }
+
+  public toggleMute(): void {
+    const next = !this.store.getState().muted;
+    this.setMuted(next);
+  }
+
+  public openHelp(): void {
+    this.store.setState({ helpOpen: true });
+    this.howItWorks.open(this.hud.helpButton);
+  }
+
+  public closeHelp(): void {
+    this.store.setState({ helpOpen: false });
+    this.howItWorks.close();
+  }
+
+  public triggerExit(): void {
+    this.store.setState({ phase: 'exited' });
+    this.exitScreen.show();
+  }
+
   public onTap(clientX: number, clientY: number): void {
     this.resetIdle();
+    this.hintSequencer.onTap();
     const rect = this.canvas.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) return;
     const ndcX = ((clientX - rect.left) / rect.width) * 2 - 1;
@@ -560,6 +739,13 @@ export class App {
     this.gestureClassifier.dispose();
     this.handCursor.dispose();
     this.vignette.dispose();
+    this.hintLine.dispose();
+    this.hintSequencer.dispose();
+    this.hud.dispose();
+    this.howItWorks.dispose();
+    this.exitScreen.dispose();
+    this.easterEggs.dispose();
+    this.entryScreen.dispose();
     this.loop.dispose();
     this.sky.dispose();
     this.ridges.dispose();

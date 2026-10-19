@@ -105,7 +105,12 @@
 }
 
 /* Touch enhancements */
-body.is-touch .glass-btn,
+body.is-touch .glass-btn {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 16px;
+}
+
 @media (pointer: coarse) {
   .glass-btn {
     min-height: 44px;
