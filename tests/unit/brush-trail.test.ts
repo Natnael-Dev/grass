@@ -126,5 +126,16 @@ describe('BrushTrail', () => {
       expect(uTrail[0]!.w).toBeCloseTo(0.5, 2); // 3.0/6 = 0.5 * 1.0 (response at t=0)
       expect(uTrail[1]!.w).toBe(0); // inactive vector is zeroed
     });
+
+    it('pushes an immediate impulse into trail', () => {
+      trail.pushImpulse(12, -4, 2.5, 1.0);
+      expect(trail.count).toBe(1);
+      const pt = trail.getActivePoints()[0]!;
+      expect(pt.x).toBe(12);
+      expect(pt.z).toBe(-4);
+      expect(pt.radius).toBe(2.5);
+      expect(pt.strength).toBe(1.0);
+      expect(pt.age).toBe(0);
+    });
   });
 });

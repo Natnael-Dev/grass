@@ -148,6 +148,35 @@ export class BrushTrail {
   }
 
   /**
+   * Pushes an immediate impulse into the trail (e.g. from dandelion seed tap).
+   */
+  public pushImpulse(x: number, z: number, radius: number, strength: number): void {
+    const max = this.maxCapacity;
+    let targetIndex: number;
+
+    if (this.activeCount < max) {
+      targetIndex = this.activeCount;
+      this.activeCount++;
+    } else {
+      const oldest = this.pool[0]!;
+      for (let i = 0; i < max - 1; i++) {
+        this.pool[i] = this.pool[i + 1]!;
+      }
+      this.pool[max - 1] = oldest;
+      targetIndex = max - 1;
+    }
+
+    const pt = this.pool[targetIndex]!;
+    pt.x = x;
+    pt.z = z;
+    pt.radius = radius;
+    pt.strength = strength;
+    pt.age = 0.0;
+
+    this.timeSinceLast = 0.0;
+  }
+
+  /**
    * Updates all active points' age by dt and removes points that exceeded MAX_LIFE (2.4s).
    */
   public update(dt: number): void {

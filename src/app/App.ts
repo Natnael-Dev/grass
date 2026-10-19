@@ -7,6 +7,8 @@ import { Ridges } from '../world/Ridges';
 import { TerrainMesh } from '../world/TerrainMesh';
 import { Tree } from '../world/Tree';
 import { Grass } from '../world/Grass';
+import { Seeds } from '../world/Seeds';
+import { Fireflies } from '../world/Fireflies';
 import { MoodController } from '../world/MoodController';
 import { getDefaultMood } from '../world/moods';
 import { terrainHeight } from '../world/terrain';
@@ -43,6 +45,8 @@ export class App {
   public readonly terrain: TerrainMesh;
   public readonly tree: Tree;
   public readonly grass: Grass;
+  public readonly seeds: Seeds;
+  public readonly fireflies: Fireflies;
   public readonly moodController: MoodController;
 
   // Interaction & input systems
@@ -122,12 +126,19 @@ export class App {
       tier: this.store.getState().quality,
       seed: this.flags.seed,
     });
+    this.seeds = new Seeds({ seed: this.flags.seed });
+    this.fireflies = new Fireflies({
+      seed: this.flags.seed,
+      tier: this.store.getState().quality,
+    });
 
     this.scene.add(this.sky.mesh);
     this.scene.add(this.ridges.group);
     this.scene.add(this.terrain.mesh);
     this.scene.add(this.grass.mesh);
     this.scene.add(this.tree.mesh);
+    this.scene.add(this.seeds.mesh);
+    this.scene.add(this.fireflies.mesh);
 
     // Vignette overlay
     this.vignette = new Vignette(undefined, {
@@ -147,6 +158,10 @@ export class App {
     this.gestureClassifier = new GestureClassifier();
 
     // Wire GestureClassifier events
+    this.gestureClassifier.on('tap', (e) => {
+      this.onTap(e.clientX, e.clientY);
+    });
+
     this.gestureClassifier.on('holdStart', () => {
       this.setLying(true);
     });
@@ -194,6 +209,7 @@ export class App {
       if (state.quality !== prev.quality) {
         this.grass.setTier(state.quality);
         this.brushTrail.setTier(state.quality);
+        this.fireflies.setTier(state.quality);
       }
       if (state.targetMood !== prev.targetMood) {
         this.moodController.setMood(state.targetMood);
@@ -277,8 +293,23 @@ export class App {
 
       // Wind gust factor during idle
       const idleGustFactor = this.cameraRig.getIdleGustFactor();
-      this.grass.uWindStrength.value = this.moodController.state.windStrength * idleGustFactor;
+      const effectiveWindStrength = this.moodController.state.windStrength * idleGustFactor;
+      this.grass.uWindStrength.value = effectiveWindStrength;
       this.grass.update(elapsed, this.cameraRig.camera.position);
+
+      // Fireflies and Seeds simulation updates
+      this.fireflies.update(
+        elapsed,
+        this.moodController.state.firefliesAmount,
+        this.renderer.gl.getPixelRatio(),
+      );
+      this.seeds.update(
+        dt,
+        this.grass.uWindDir.value,
+        effectiveWindStrength,
+        this.moodController.state.lightColor,
+        this.renderer.gl.getPixelRatio(),
+      );
 
       // 4. Process Virtual Keyboard Brush or Pointer
       this.keyboardBrush.update(dt);
@@ -394,6 +425,7 @@ export class App {
     this.store.setState({ quality: tier });
     this.grass.setTier(tier);
     this.brushTrail.setTier(tier);
+    this.fireflies.setTier(tier);
   }
 
   public setMood(mood: MoodName, immediate = false): void {
@@ -403,6 +435,51 @@ export class App {
       this.store.setState({ mood });
       this.applyCurrentMood();
     }
+  }
+
+  public onTap(clientX: number, clientY: number): void {
+    this.resetIdle();
+    const rect = this.canvas.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+    const ndcX = ((clientX - rect.left) / rect.width) * 2 - 1;
+    const ndcY = -(((clientY - rect.top) / rect.height) * 2 - 1);
+
+    const groundHit = this.groundRaycaster.intersect(
+      this.cameraRig.camera,
+      ndcX,
+      ndcY,
+      this.loop.getFrameCount(),
+    );
+
+    if (groundHit) {
+      this.seeds.spawn(groundHit.x, groundHit.y, groundHit.z, this.store.getState().quality);
+
+      // Tap brush impulse: radius x1.3, strength 1.0
+      const distFromCam = groundHit.distanceTo(this.cameraRig.camera.position);
+      const baseRadius = Math.min(3.0, Math.max(1.4, 1.4 + 0.05 * distFromCam));
+      this.brushTrail.pushImpulse(groundHit.x, groundHit.z, baseRadius * 1.3, 1.0);
+    }
+  }
+
+  public spawnSeeds(x?: number, z?: number): void {
+    const spawnX = x ?? 0;
+    const spawnZ = z ?? 0;
+    const spawnY = terrainHeight(spawnX, spawnZ);
+    this.seeds.spawn(spawnX, spawnY, spawnZ, this.store.getState().quality);
+    const distFromCam = Math.hypot(
+      spawnX - this.cameraRig.camera.position.x,
+      spawnZ - this.cameraRig.camera.position.z,
+    );
+    const baseRadius = Math.min(3.0, Math.max(1.4, 1.4 + 0.05 * distFromCam));
+    this.brushTrail.pushImpulse(spawnX, spawnZ, baseRadius * 1.3, 1.0);
+  }
+
+  public getSeedsCount(): number {
+    return this.seeds.getActiveCount();
+  }
+
+  public getFirefliesCount(): number {
+    return this.fireflies.getTierCount();
   }
 
   public setLying(lying: boolean): void {
@@ -489,6 +566,8 @@ export class App {
     this.terrain.dispose();
     this.tree.dispose();
     this.grass.dispose();
+    this.seeds.dispose();
+    this.fireflies.dispose();
     this.statsOverlay?.dispose();
     this.renderer.dispose();
   }
