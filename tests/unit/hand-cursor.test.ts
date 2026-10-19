@@ -147,4 +147,61 @@ describe('HandCursor', () => {
 
     expect(mockEl.style.opacity).toBe('0');
   });
+
+  it('shows pressed fist when holding, then hides after 1.0s of hold', () => {
+    cursor.setHolding(true);
+    // At t=0.1s
+    cursor.update(
+      0.1,
+      {
+        clientX: 300,
+        clientY: 200,
+        deltaX: 0,
+        deltaY: 0,
+        isDown: false,
+        isInside: true,
+        pointerType: 'mouse',
+      },
+      true,
+    );
+    expect(cursor.state).toBe('pressed');
+    expect(mockEl.dataset.state).toBe('pressed');
+    expect(mockEl.style.opacity).toBe('1');
+
+    // Advance past 1.0s (10 * 0.1s = 1.0s more)
+    for (let i = 0; i < 10; i++) {
+      cursor.update(
+        0.1,
+        {
+          clientX: 300,
+          clientY: 200,
+          deltaX: 0,
+          deltaY: 0,
+          isDown: false,
+          isInside: true,
+          pointerType: 'mouse',
+        },
+        true,
+      );
+    }
+    expect(mockEl.style.opacity).toBe('0');
+
+    // When hold ends, cursor becomes visible again
+    cursor.setHolding(false);
+    cursor.update(
+      0.1,
+      {
+        clientX: 300,
+        clientY: 200,
+        deltaX: 0,
+        deltaY: 0,
+        isDown: false,
+        isInside: true,
+        pointerType: 'mouse',
+      },
+      true,
+    );
+    expect(mockEl.style.opacity).toBe('1');
+    expect(cursor.state).toBe('open');
+  });
 });
