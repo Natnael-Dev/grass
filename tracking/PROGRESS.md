@@ -1,8 +1,8 @@
 # PROGRESS — the agent's live log (update after EVERY task and gate)
 
-**Current milestone:** M3 (Grass instancing + wind — G2)
-**Current state:** complete-approved
-**Last updated:** 2026-10-19 11:10
+**Current milestone:** M4 (Mood system — G3)
+**Current state:** gated-awaiting-G3-approval
+**Last updated:** 2026-10-19 19:35
 **Open blockers:** none
 
 ## Milestone checklist
@@ -13,7 +13,7 @@ Mark `[x]` only when the gate passed AND evidence exists AND (strict mode) the h
 - [x] M1 Tooling scaffold, CI, hooks — evidence: tracking/evidence/M1/
 - [x] M2 Render core (G1) — evidence: tracking/evidence/M2/
 - [x] M3 Grass + wind (G2) — evidence: tracking/evidence/M3/
-- [ ] M4 Mood system (G3)
+- [ ] M4 Mood system (G3) — evidence: tracking/evidence/M4/
 - [ ] M5 Brush + hand cursor (G4)
 - [ ] M6 Lie-down + parallax + idle (G5)
 - [ ] M7 Seeds + fireflies (G6)
@@ -44,12 +44,19 @@ Format: `YYYY-MM-DD HH:MM | Mx | task | result | commit-sha | evidence-path`
 2026-10-19 10:42 | M3 | Task 3.4 & 3.5 Grass system assembly & tier LOD | pass | fb0a78e | tracking/evidence/M3/README.md
 2026-10-19 10:50 | M3 | Task 3.6 App integration, tier URL flag & terrain blending | pass | 803b405 | tracking/evidence/M3/README.md
 2026-10-19 11:05 | M3 | Task 3.7 E2E grass tests, wind motion, vista screenshot | pass | 1ae04cc | tracking/evidence/M3/README.md
+2026-10-19 11:23 | M4 | Task 4.1 mood presets & time-of-day default logic | pass | 99c3fc2 | tracking/evidence/M4/README.md
+2026-10-19 19:05 | M4 | Task 4.2 MoodController retargetable crossfade & arc math | pass | 965aad3 | tracking/evidence/M4/README.md
+2026-10-19 19:08 | M4 | Task 4.3 sky shader moon mottling & star field crossfade | pass | f9f9686 | tracking/evidence/M4/README.md
+2026-10-19 19:12 | M4 | Task 4.4 wire MoodState to world systems | pass | 2de09f5 | tracking/evidence/M4/README.md
+2026-10-19 19:16 | M4 | Task 4.5 App loop integration & dev keys 1, 2, 3 | pass | f05f730 | tracking/evidence/M4/README.md
+2026-10-19 19:30 | M4 | Task 4.6 E2E mood crossfade verification & screenshot capture | pass | ac95768 | tracking/evidence/M4/README.md
 
 ## Attempt log (for failing checks; max 3 per check)
 
 Format: `Mx | check | attempt # | hypothesis | change | result`
 M3 | Playwright E2E | 1 | SwiftShader software WebGL execution timed out at 30s | Set test.setTimeout(60000) and playwright.config timeout: 60000 | pass
 M3 | Shader compile | 1 | GLSL ES 3 reserved word 'patch' in grass.frag.glsl | Renamed patch to meadowPatch | pass
+M4 | Playwright E2E | 1 | Bundling 3 page loads + screenshots into 1 test exceeded 60s in SwiftShader | Split into separate tests per mood screenshot | pass
 
 ## Agent-proposed decisions (see ADR file)
 
