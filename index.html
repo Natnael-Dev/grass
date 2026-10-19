@@ -58,8 +58,7 @@
         pointer-events: none;
         z-index: 10;
       }
-      body.lying .hud,
-      body.lying #entry-overlay {
+      body.lying .hud {
         opacity: 0.35;
         transition: opacity 1.1s cubic-bezier(0.22, 0.8, 0.2, 1);
       }
@@ -83,6 +82,7 @@
       .entry-overlay.hidden {
         opacity: 0;
         pointer-events: none;
+        display: none;
       }
       .entry-content {
         display: flex;
