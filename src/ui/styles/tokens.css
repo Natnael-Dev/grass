@@ -1,0 +1,142 @@
+:root {
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+  --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --text: #f4f1e8; /* primary text on glass */
+  --text-muted: #cfcdc2; /* secondary, >= 4.5:1 on panel */
+  --accent: #c5f277; /* grass-neon, primary button bg */
+  --accent-ink: #10200c; /* text on accent */
+  --panel: rgba(10, 14, 28, 0.58);
+  --panel-solid: rgba(10, 14, 28, 0.82); /* fallback w/o backdrop-filter, and high-contrast */
+  --panel-border: rgba(255, 255, 255, 0.16);
+  --focus: #ffe08a;
+  --radius-pill: 999px;
+  --radius-panel: 14px;
+  --blur: 12px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --size-text-s: 12px;
+  --size-text-m: 14px;
+  --size-text-l: 18px;
+  --size-title: clamp(48px, 9vw, 112px);
+  --ease-out: cubic-bezier(0.22, 0.8, 0.2, 1);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 160ms;
+  --dur-med: 320ms;
+  --dur-slow: 900ms;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* Glass panel utility */
+.glass-panel {
+  background: var(--panel-solid);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-panel);
+  color: var(--text);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.36);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .glass-panel {
+    background: var(--panel);
+    backdrop-filter: blur(var(--blur));
+    -webkit-backdrop-filter: blur(var(--blur));
+  }
+}
+
+/* Common interactive button styling */
+.glass-btn {
+  background: var(--panel-solid);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1;
+  text-transform: lowercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .glass-btn {
+    background: var(--panel);
+    backdrop-filter: blur(var(--blur));
+    -webkit-backdrop-filter: blur(var(--blur));
+  }
+}
+
+.glass-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.glass-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.glass-btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.glass-btn[aria-pressed='true'] {
+  background: rgba(197, 242, 119, 0.22);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Touch enhancements */
+body.is-touch .glass-btn,
+@media (pointer: coarse) {
+  .glass-btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0 16px;
+  }
+}
+
+/* High contrast / forced colors */
+@media (forced-colors: active) {
+  .glass-panel,
+  .glass-btn {
+    background: Canvas;
+    color: CanvasText;
+    border: 2px solid ButtonBorder;
+  }
+  .glass-btn:focus-visible {
+    outline: 3px solid Highlight;
+  }
+  .glass-btn[aria-pressed='true'] {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .glass-btn,
+  .glass-panel {
+    transition: none !important;
+    animation: none !important;
+  }
+}
