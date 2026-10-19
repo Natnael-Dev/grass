@@ -100,6 +100,7 @@ export class MoodController {
   public static readonly FADE_DURATION = 2.5; // 2.5s per FR-04 and motion doc
 
   public readonly state: MoodState;
+  public onMoodChange?: (mood: MoodName) => void;
 
   private isFading = false;
   private fadeElapsed = 0;
@@ -233,6 +234,7 @@ export class MoodController {
       this.state.isFading = false;
       this.applyPreset(MOOD_PRESETS[target]);
       this.snapshotToStart();
+      this.onMoodChange?.(target);
       return;
     }
 
@@ -325,6 +327,7 @@ export class MoodController {
       this.state.isFading = false;
       this.state.progress = 1;
       this.applyPreset(targetPreset);
+      this.onMoodChange?.(this.targetMood);
     }
   }
 
