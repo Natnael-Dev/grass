@@ -125,6 +125,20 @@ export class Ridges {
     return geometry;
   }
 
+  public applyMood(mood: {
+    ridge1: THREE.Color;
+    ridge2: THREE.Color;
+    ridge3: THREE.Color;
+    fogColor: THREE.Color;
+    fogDensity: number;
+  }): void {
+    this.uRidge1Color.value.copy(mood.ridge1);
+    this.uRidge2Color.value.copy(mood.ridge2);
+    this.uRidge3Color.value.copy(mood.ridge3);
+    this.uFogColor.value.copy(mood.fogColor);
+    this.uFogDensity.value = mood.fogDensity;
+  }
+
   public dispose(): void {
     for (const g of this.geometries) {
       g.dispose();

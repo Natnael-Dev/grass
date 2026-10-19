@@ -170,6 +170,30 @@ export class Grass {
     this.uSunDir.value.copy(sunDir);
   }
 
+  public applyMood(mood: {
+    grassBase: THREE.Color;
+    grassTip: THREE.Color;
+    lightColor: THREE.Color;
+    lightIntensity: number;
+    ambientColor: THREE.Color;
+    ambientIntensity: number;
+    sunDir: THREE.Vector3;
+    fogColor: THREE.Color;
+    fogDensity: number;
+    windStrength: number;
+  }): void {
+    this.uGrassBase.value.copy(mood.grassBase);
+    this.uGrassTip.value.copy(mood.grassTip);
+    this.uLightColor.value.copy(mood.lightColor);
+    this.uLightIntensity.value = mood.lightIntensity;
+    this.uAmbientColor.value.copy(mood.ambientColor);
+    this.uAmbientIntensity.value = mood.ambientIntensity;
+    this.uSunDir.value.copy(mood.sunDir);
+    this.uFogColor.value.copy(mood.fogColor);
+    this.uFogDensity.value = mood.fogDensity;
+    this.uWindStrength.value = mood.windStrength;
+  }
+
   public dispose(): void {
     this.noiseTexture.dispose();
     this.material.dispose();
