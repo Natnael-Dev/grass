@@ -1,8 +1,8 @@
 # PROGRESS — the agent's live log (update after EVERY task and gate)
 
 **Current milestone:** M7 (Seeds + fireflies — G6)
-**Current state:** planning
-**Last updated:** 2026-10-19 21:43
+**Current state:** awaiting human approval (Gate G6)
+**Last updated:** 2026-10-19 22:31
 **Open blockers:** none
 
 ## Milestone checklist
@@ -61,6 +61,10 @@ Format: `YYYY-MM-DD HH:MM | Mx | task | result | commit-sha | evidence-path`
 2026-10-19 21:18 | M6 | Task 6.3 Vignette overlay, HUD lie-down dimming, cursor hold auto-hide | pass | 7d54e44 | tracking/evidence/M6/README.md
 2026-10-19 21:24 | M6 | Task 6.4 App loop integration, inactivity timer, idle gust wiring | pass | bb043c4 | tracking/evidence/M6/README.md
 2026-10-19 21:35 | M6 | Task 6.5 Playwright E2E lie-down, idle, terrain clearance & screenshots | pass | a0cc900 | tracking/evidence/M6/README.md
+2026-10-19 22:00 | M7 | Task 7.1 seed particle system with wind drift and lifecycles | pass | cba6951 | tracking/evidence/M7/README.md
+2026-10-19 22:03 | M7 | Task 7.2 GPU animated fireflies with mood crossfade | pass | 71777cc | tracking/evidence/M7/README.md
+2026-10-19 22:15 | M7 | Task 7.3 seeds spawn and fireflies integrated into world and input loop | pass | 375138f | tracking/evidence/M7/README.md
+2026-10-19 22:28 | M7 | Task 7.4 Playwright E2E tests for seeds and fireflies | pass | 3eb9e59 | tracking/evidence/M7/README.md
 
 ## Attempt log (for failing checks; max 3 per check)
 
@@ -71,6 +75,7 @@ M4 | Playwright E2E | 1 | Bundling 3 page loads + screenshots into 1 test exceed
 M5 | Playwright E2E | 1 | 5 sequential screenshots exceeded default 60s in SwiftShader CPU emulation | Set test.setTimeout(120000) on screenshot sequence test | pass
 M5 | Loop.ts freeze | 1 | Loop.ts was advancing time with dt=fixedDt on rAF when frozen | Set dt=0 on frozen rAF ticks so time only advances via explicit step(dt) | pass
 M6 | Playwright E2E | 1 | Entry overlay obscured lie-down screenshots and SwiftShader 2-screenshot capture timed out at 30s | Added display:none to .entry-overlay.hidden and set test.setTimeout(120000) | pass
+M7 | Playwright E2E | 1 | Loop.step clamped dt to 0.1s so 8x0.5s calls advanced only 0.8s rather than 4.0s | Used loop of step(0.1) totaling 7.0s | pass
 
 ## Agent-proposed decisions (see ADR file)
 
