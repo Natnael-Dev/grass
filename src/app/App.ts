@@ -9,6 +9,12 @@ import { Tree } from '../world/Tree';
 import { Grass } from '../world/Grass';
 import { MoodController } from '../world/MoodController';
 import { getDefaultMood } from '../world/moods';
+import { terrainHeight } from '../world/terrain';
+import { BrushTrail } from '../world/BrushTrail';
+import { GroundRaycaster } from '../input/GroundRaycaster';
+import { Pointer } from '../input/Pointer';
+import { KeyboardBrush } from '../input/KeyboardBrush';
+import { HandCursor } from '../ui/HandCursor';
 import { parseFlags, type AppFlags, type QualityTier, type MoodName } from './flags';
 import { detectCapabilities, type Capabilities } from './capabilities';
 import { Store } from './store';
@@ -36,6 +42,20 @@ export class App {
   public readonly tree: Tree;
   public readonly grass: Grass;
   public readonly moodController: MoodController;
+
+  // Interaction & input systems
+  public readonly pointer: Pointer;
+  public readonly groundRaycaster: GroundRaycaster;
+  public readonly brushTrail: BrushTrail;
+  public readonly keyboardBrush: KeyboardBrush;
+  public readonly handCursor: HandCursor;
+
+  // Pre-allocated scratch vectors to prevent per-frame GC allocations
+  private readonly prevGroundHit = new THREE.Vector3();
+  private hasPrevGroundHit = false;
+  private readonly scratchGroundHit = new THREE.Vector3();
+  private readonly scratchProjected = new THREE.Vector3();
+  private readonly virtualScreenPos = { x: 0, y: 0 };
 
   // Debug overlay
   public readonly statsOverlay: StatsOverlay | null = null;
@@ -100,6 +120,13 @@ export class App {
     // Initial mood setup across all world systems
     this.applyCurrentMood();
 
+    // Interaction systems
+    this.pointer = new Pointer(this.canvas);
+    this.groundRaycaster = new GroundRaycaster();
+    this.brushTrail = new BrushTrail(this.store.getState().quality);
+    this.keyboardBrush = new KeyboardBrush();
+    this.handCursor = new HandCursor();
+
     if (this.flags.debug) {
       this.statsOverlay = new StatsOverlay();
     }
@@ -114,6 +141,7 @@ export class App {
     this.store.subscribe((state, prev) => {
       if (state.quality !== prev.quality) {
         this.grass.setTier(state.quality);
+        this.brushTrail.setTier(state.quality);
       }
       if (state.targetMood !== prev.targetMood) {
         this.moodController.setMood(state.targetMood);
@@ -123,9 +151,9 @@ export class App {
     if (typeof window !== 'undefined') {
       this.keydownHandler = (e: KeyboardEvent) => {
         if (
-          e.target instanceof HTMLInputElement ||
-          e.target instanceof HTMLTextAreaElement ||
-          e.target instanceof HTMLSelectElement
+          (typeof HTMLInputElement !== 'undefined' && e.target instanceof HTMLInputElement) ||
+          (typeof HTMLTextAreaElement !== 'undefined' && e.target instanceof HTMLTextAreaElement) ||
+          (typeof HTMLSelectElement !== 'undefined' && e.target instanceof HTMLSelectElement)
         ) {
           return;
         }
@@ -155,6 +183,77 @@ export class App {
       this.sky.update(elapsed, this.cameraRig.camera.position);
       this.tree.update(elapsed);
       this.grass.update(elapsed, this.cameraRig.camera.position);
+
+      // 1. Process Virtual Keyboard Brush or Pointer
+      this.keyboardBrush.update(dt);
+      let groundHit: THREE.Vector3 | null = null;
+      let groundSpeed = 0;
+      let hasVirtualScreenPos = false;
+
+      if (this.keyboardBrush.isActive) {
+        const kx = this.keyboardBrush.groundPos.x;
+        const kz = this.keyboardBrush.groundPos.z;
+        this.scratchGroundHit.set(kx, terrainHeight(kx, kz), kz);
+        groundHit = this.scratchGroundHit;
+        groundSpeed = this.keyboardBrush.speed;
+
+        this.scratchProjected.copy(groundHit).project(this.cameraRig.camera);
+        const canvasWidth = this.canvas.clientWidth || 800;
+        const canvasHeight = this.canvas.clientHeight || 600;
+        this.virtualScreenPos.x = (this.scratchProjected.x * 0.5 + 0.5) * canvasWidth;
+        this.virtualScreenPos.y = (-this.scratchProjected.y * 0.5 + 0.5) * canvasHeight;
+        hasVirtualScreenPos = true;
+      } else {
+        if (this.pointer.state.deltaX !== 0 || this.pointer.state.deltaY !== 0) {
+          this.keyboardBrush.deactivate();
+        }
+
+        groundHit = this.groundRaycaster.intersect(
+          this.cameraRig.camera,
+          this.pointer.state.ndcX,
+          this.pointer.state.ndcY,
+          this.loop.getFrameCount(),
+        );
+
+        if (groundHit && this.hasPrevGroundHit) {
+          const dist = Math.hypot(
+            groundHit.x - this.prevGroundHit.x,
+            groundHit.z - this.prevGroundHit.z,
+          );
+          const instSpeed = dt > 0 ? dist / dt : 0;
+          this.pointer.recordGroundSpeed(instSpeed);
+          this.prevGroundHit.copy(groundHit);
+        } else if (groundHit) {
+          this.pointer.recordGroundSpeed(0);
+          this.prevGroundHit.copy(groundHit);
+          this.hasPrevGroundHit = true;
+        } else {
+          this.pointer.recordGroundSpeed(0);
+          this.hasPrevGroundHit = false;
+        }
+
+        groundSpeed = this.pointer.getSmoothedGroundSpeed();
+      }
+
+      // 2. Brush Interaction: push into trail if hit ground and not in lie-down mode
+      if (groundHit && !this.cameraRig.getIsLying()) {
+        this.brushTrail.maybePush(groundHit, groundSpeed, this.cameraRig.camera.position);
+      }
+
+      // 3. Update brush trail spring response & pack into grass uniforms
+      this.brushTrail.update(dt);
+      this.brushTrail.writeUniforms(this.grass.uTrail.value, this.grass.uTrailCount);
+
+      // 4. Update Hand Cursor
+      this.handCursor.update(
+        dt,
+        this.pointer.state,
+        groundHit !== null,
+        hasVirtualScreenPos ? this.virtualScreenPos : null,
+      );
+
+      // Reset pointer deltas for the frame
+      this.pointer.resetDelta();
 
       this.renderer.render(this.scene, this.cameraRig.camera);
 
@@ -193,6 +292,7 @@ export class App {
   public setQuality(tier: QualityTier): void {
     this.store.setState({ quality: tier });
     this.grass.setTier(tier);
+    this.brushTrail.setTier(tier);
   }
 
   public setMood(mood: MoodName, immediate = false): void {
@@ -202,6 +302,10 @@ export class App {
       this.store.setState({ mood });
       this.applyCurrentMood();
     }
+  }
+
+  public step(dt: number): void {
+    this.loop.step(dt);
   }
 
   public getStats(): {
@@ -226,6 +330,9 @@ export class App {
       window.removeEventListener('keydown', this.keydownHandler);
       this.keydownHandler = null;
     }
+    this.pointer.dispose();
+    this.keyboardBrush.dispose();
+    this.handCursor.dispose();
     this.loop.dispose();
     this.sky.dispose();
     this.ridges.dispose();

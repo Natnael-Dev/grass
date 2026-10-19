@@ -15,6 +15,7 @@ export interface GrassDebugApi {
   setTier: (tier: QualityTier) => void;
   setMood: (m: MoodName) => void;
   freeze: (on: boolean) => void;
+  step: (dt: number) => void;
   enter: () => void;
 }
 
@@ -58,6 +59,9 @@ function boot(): void {
         },
         freeze: (on: boolean) => {
           app.loop.setFrozen(on);
+        },
+        step: (dt: number) => {
+          app.step(dt);
         },
         enter: () => {
           app.enter();
