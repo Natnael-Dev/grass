@@ -1,8 +1,8 @@
 # PROGRESS — the agent's live log (update after EVERY task and gate)
 
 **Current milestone:** M3 (Grass instancing + wind — G2)
-**Current state:** in-progress
-**Last updated:** 2026-10-19 01:12
+**Current state:** gated-awaiting-G2-approval
+**Last updated:** 2026-10-19 11:08
 **Open blockers:** none
 
 ## Milestone checklist
@@ -12,7 +12,7 @@ Mark `[x]` only when the gate passed AND evidence exists AND (strict mode) the h
 - [x] M0 Capability discovery, repo + GitHub bootstrap — evidence: tracking/evidence/M0/
 - [x] M1 Tooling scaffold, CI, hooks — evidence: tracking/evidence/M1/
 - [x] M2 Render core (G1) — evidence: tracking/evidence/M2/
-- [ ] M3 Grass + wind (G2)
+- [ ] M3 Grass + wind (G2) — evidence: tracking/evidence/M3/
 - [ ] M4 Mood system (G3)
 - [ ] M5 Brush + hand cursor (G4)
 - [ ] M6 Lie-down + parallax + idle (G5)
@@ -38,10 +38,18 @@ Format: `YYYY-MM-DD HH:MM | Mx | task | result | commit-sha | evidence-path`
 2026-10-19 00:51 | M2 | Task 2.7 low-poly silhouette Tree on hill crest | pass | 50d8f20 | tracking/evidence/M2/README.md
 2026-10-19 01:03 | M2 | Task 2.8 App integration, store, flags, capabilities, debug overlay | pass | 8393e80 | tracking/evidence/M2/README.md
 2026-10-19 01:05 | M2 | Task 2.9 E2E render core visual verification & golden vista capture | pass | a3cd6ea | tracking/evidence/M2/README.md
+2026-10-19 10:20 | M3 | Task 3.1 LOD blade geometry with 4/3/2 segments | pass | e048f74 | tracking/evidence/M3/README.md
+2026-10-19 10:25 | M3 | Task 3.2 256x256 seamless dual-octave wind noise texture | pass | 90b03e8 | tracking/evidence/M3/README.md
+2026-10-19 10:30 | M3 | Task 3.3 90k seeded grass instance generator with rings | pass | 14794c7 | tracking/evidence/M3/README.md
+2026-10-19 10:42 | M3 | Task 3.4 & 3.5 Grass system assembly & tier LOD | pass | fb0a78e | tracking/evidence/M3/README.md
+2026-10-19 10:50 | M3 | Task 3.6 App integration, tier URL flag & terrain blending | pass | 803b405 | tracking/evidence/M3/README.md
+2026-10-19 11:05 | M3 | Task 3.7 E2E grass tests, wind motion, vista screenshot | pass | 1ae04cc | tracking/evidence/M3/README.md
 
 ## Attempt log (for failing checks; max 3 per check)
 
 Format: `Mx | check | attempt # | hypothesis | change | result`
+M3 | Playwright E2E | 1 | SwiftShader software WebGL execution timed out at 30s | Set test.setTimeout(60000) and playwright.config timeout: 60000 | pass
+M3 | Shader compile | 1 | GLSL ES 3 reserved word 'patch' in grass.frag.glsl | Renamed patch to meadowPatch | pass
 
 ## Agent-proposed decisions (see ADR file)
 
