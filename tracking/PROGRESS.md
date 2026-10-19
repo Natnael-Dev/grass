@@ -1,8 +1,8 @@
 # PROGRESS — the agent's live log (update after EVERY task and gate)
 
 **Current milestone:** M8 (UI shell + hints + easter eggs — G7)
-**Current state:** planning
-**Last updated:** 2026-10-19 22:52
+**Current state:** waiting for G7 human approval
+**Last updated:** 2026-10-19 23:45
 **Open blockers:** none
 
 ## Milestone checklist
@@ -65,6 +65,7 @@ Format: `YYYY-MM-DD HH:MM | Mx | task | result | commit-sha | evidence-path`
 2026-10-19 22:03 | M7 | Task 7.2 GPU animated fireflies with mood crossfade | pass | 71777cc | tracking/evidence/M7/README.md
 2026-10-19 22:15 | M7 | Task 7.3 seeds spawn and fireflies integrated into world and input loop | pass | 375138f | tracking/evidence/M7/README.md
 2026-10-19 22:28 | M7 | Task 7.4 Playwright E2E tests for seeds and fireflies | pass | 3eb9e59 | tracking/evidence/M7/README.md
+2026-10-19 23:45 | M8 | UI shell, hints, help, uptime, easter eggs, 404, e2e J1/J2/J4 suite | pass | HEAD | tracking/evidence/M8/README.md
 
 ## Attempt log (for failing checks; max 3 per check)
 
@@ -76,6 +77,7 @@ M5 | Playwright E2E | 1 | 5 sequential screenshots exceeded default 60s in Swift
 M5 | Loop.ts freeze | 1 | Loop.ts was advancing time with dt=fixedDt on rAF when frozen | Set dt=0 on frozen rAF ticks so time only advances via explicit step(dt) | pass
 M6 | Playwright E2E | 1 | Entry overlay obscured lie-down screenshots and SwiftShader 2-screenshot capture timed out at 30s | Added display:none to .entry-overlay.hidden and set test.setTimeout(120000) | pass
 M7 | Playwright E2E | 1 | Loop.step clamped dt to 0.1s so 8x0.5s calls advanced only 0.8s rather than 4.0s | Used loop of step(0.1) totaling 7.0s | pass
+M8 | Playwright E2E | 1 | Headless Chromium timer clamping in background tabs delayed char typing | Used elapsed time calculation in HintLine and skipTyping() | pass
 
 ## Agent-proposed decisions (see ADR file)
 
