@@ -11,7 +11,7 @@ Repo: https://github.com/Natnael-Dev/grass
 | Gate                  | Status   | Date       | Notes                     |
 | --------------------- | -------- | ---------- | ------------------------- |
 | G1 (M2)               | approved | 2026-10-19 | approved by human in chat |
-| G2 (M3)               | pending  |            |                           |
+| G2 (M3)               | approved | 2026-10-19 | approved by human in chat |
 | G3 (M4)               | pending  |            |                           |
 | G4 (M5)               | pending  |            |                           |
 | G5 (M6)               | pending  |            |                           |
