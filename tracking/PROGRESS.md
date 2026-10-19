@@ -1,8 +1,8 @@
 # PROGRESS — the agent's live log (update after EVERY task and gate)
 
-**Current milestone:** M2 (Render core — awaiting Gate G1 approval)
-**Current state:** waiting-human-test
-**Last updated:** 2026-10-19 01:06
+**Current milestone:** M3 (Grass instancing + wind — G2)
+**Current state:** in-progress
+**Last updated:** 2026-10-19 01:12
 **Open blockers:** none
 
 ## Milestone checklist
@@ -11,7 +11,7 @@ Mark `[x]` only when the gate passed AND evidence exists AND (strict mode) the h
 
 - [x] M0 Capability discovery, repo + GitHub bootstrap — evidence: tracking/evidence/M0/
 - [x] M1 Tooling scaffold, CI, hooks — evidence: tracking/evidence/M1/
-- [ ] M2 Render core (G1) — evidence: tracking/evidence/M2/ (automated gate green; awaiting human G1 approval)
+- [x] M2 Render core (G1) — evidence: tracking/evidence/M2/
 - [ ] M3 Grass + wind (G2)
 - [ ] M4 Mood system (G3)
 - [ ] M5 Brush + hand cursor (G4)
