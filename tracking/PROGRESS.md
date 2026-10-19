@@ -1,8 +1,8 @@
 # PROGRESS — the agent's live log (update after EVERY task and gate)
 
 **Current milestone:** M4 (Mood system — G3)
-**Current state:** gated-awaiting-G3-approval
-**Last updated:** 2026-10-19 19:35
+**Current state:** complete-approved
+**Last updated:** 2026-10-19 19:48
 **Open blockers:** none
 
 ## Milestone checklist
@@ -13,7 +13,7 @@ Mark `[x]` only when the gate passed AND evidence exists AND (strict mode) the h
 - [x] M1 Tooling scaffold, CI, hooks — evidence: tracking/evidence/M1/
 - [x] M2 Render core (G1) — evidence: tracking/evidence/M2/
 - [x] M3 Grass + wind (G2) — evidence: tracking/evidence/M3/
-- [ ] M4 Mood system (G3) — evidence: tracking/evidence/M4/
+- [x] M4 Mood system (G3) — evidence: tracking/evidence/M4/
 - [ ] M5 Brush + hand cursor (G4)
 - [ ] M6 Lie-down + parallax + idle (G5)
 - [ ] M7 Seeds + fireflies (G6)
