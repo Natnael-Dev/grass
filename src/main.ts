@@ -1,5 +1,5 @@
 import { App } from './app/App';
-import type { MoodName } from './app/flags';
+import type { MoodName, QualityTier } from './app/flags';
 import type { AppState } from './app/store';
 
 export interface GrassDebugApi {
@@ -12,6 +12,7 @@ export interface GrassDebugApi {
     triangles: number;
     blades: number;
   };
+  setTier: (tier: QualityTier) => void;
   setMood: (m: MoodName) => void;
   freeze: (on: boolean) => void;
   enter: () => void;
@@ -49,6 +50,9 @@ function boot(): void {
         app,
         getState: () => app.store.getState(),
         stats: () => app.getStats(),
+        setTier: (t: QualityTier) => {
+          app.setQuality(t);
+        },
         setMood: (m: MoodName) => {
           app.store.setState({ mood: m, targetMood: m });
         },
