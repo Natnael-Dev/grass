@@ -103,6 +103,9 @@ export class BrushTrail {
     if (this.activeCount > 0) {
       const last = this.pool[this.activeCount - 1]!;
       const dist = Math.hypot(hitPoint.x - last.x, hitPoint.z - last.z);
+      if (dist < 0.05) {
+        return false;
+      }
       if (dist < 0.25 && this.timeSinceLast < 0.04) {
         return false;
       }

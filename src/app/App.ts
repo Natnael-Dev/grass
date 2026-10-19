@@ -250,10 +250,13 @@ export class App {
         this.pointer.state,
         groundHit !== null,
         hasVirtualScreenPos ? this.virtualScreenPos : null,
+        groundSpeed,
       );
 
-      // Reset pointer deltas for the frame
-      this.pointer.resetDelta();
+      // Reset pointer deltas for the frame when advancing simulation
+      if (dt > 0) {
+        this.pointer.resetDelta();
+      }
 
       this.renderer.render(this.scene, this.cameraRig.camera);
 

@@ -104,6 +104,7 @@ export class HandCursor {
     pointerInput: HandCursorPointerInput,
     isOverTerrain: boolean,
     virtualScreenPos?: { x: number; y: number } | null,
+    speed = 0,
   ): void {
     const isTouchOrPen = pointerInput.pointerType === 'touch' || pointerInput.pointerType === 'pen';
 
@@ -143,11 +144,14 @@ export class HandCursor {
     if (pointerInput.isDown) {
       nextState = 'pressed';
       this.targetRot = 0;
-    } else if (isOverTerrain && (pointerInput.deltaX !== 0 || pointerInput.deltaY !== 0)) {
+    } else if (
+      isOverTerrain &&
+      (Math.abs(pointerInput.deltaX) > 1 || Math.abs(pointerInput.deltaY) > 1 || speed > 0.4)
+    ) {
       nextState = 'moving';
       // Rotation: clamp(vx * 0.02, +/- 12 deg)
-      const rot = pointerInput.deltaX * 0.08;
-      this.targetRot = Math.max(-12, Math.min(12, rot));
+      const rot = Math.max(-12, Math.min(12, pointerInput.deltaX * 0.15));
+      this.targetRot = rot;
     } else {
       nextState = 'open';
       this.targetRot = 0;

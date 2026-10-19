@@ -94,7 +94,7 @@ export class Loop {
     this.lastTime = now;
 
     if (this.isFrozen) {
-      dt = this.fixedDt;
+      dt = 0;
     } else {
       // Clamp dt to prevent physics/animation explosions after frame drops
       dt = Math.min(Math.max(0, dt), this.maxDt);
