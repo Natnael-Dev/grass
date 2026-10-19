@@ -48,6 +48,10 @@ export class App {
 
     const initialMood = this.flags.mood ?? getDefaultMood();
     this.moodController = new MoodController(initialMood);
+    this.moodController.onMoodChange = (mood) => {
+      this.store.setState({ mood, targetMood: mood });
+      this.applyCurrentMood();
+    };
 
     this.store = new Store({
       quality: this.capabilities.tier,
