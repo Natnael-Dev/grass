@@ -54,7 +54,7 @@ function boot(): void {
           app.setQuality(t);
         },
         setMood: (m: MoodName) => {
-          app.store.setState({ mood: m, targetMood: m });
+          app.setMood(m);
         },
         freeze: (on: boolean) => {
           app.loop.setFrozen(on);

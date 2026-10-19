@@ -7,7 +7,9 @@ import { Ridges } from '../world/Ridges';
 import { TerrainMesh } from '../world/TerrainMesh';
 import { Tree } from '../world/Tree';
 import { Grass } from '../world/Grass';
-import { parseFlags, type AppFlags, type QualityTier } from './flags';
+import { MoodController } from '../world/MoodController';
+import { getDefaultMood } from '../world/moods';
+import { parseFlags, type AppFlags, type QualityTier, type MoodName } from './flags';
 import { detectCapabilities, type Capabilities } from './capabilities';
 import { Store } from './store';
 import { StatsOverlay } from '../debug/StatsOverlay';
@@ -33,21 +35,26 @@ export class App {
   public readonly terrain: TerrainMesh;
   public readonly tree: Tree;
   public readonly grass: Grass;
+  public readonly moodController: MoodController;
 
   // Debug overlay
   public readonly statsOverlay: StatsOverlay | null = null;
   private currentFps = 60;
+  private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
 
   constructor(options: AppOptions = {}) {
     this.flags = options.flags ?? parseFlags();
     this.capabilities = detectCapabilities(this.flags.quality);
 
+    const initialMood = this.flags.mood ?? getDefaultMood();
+    this.moodController = new MoodController(initialMood);
+
     this.store = new Store({
       quality: this.capabilities.tier,
       reducedMotion: this.capabilities.reducedMotion,
       isTouch: this.capabilities.isTouch,
-      mood: this.flags.mood ?? 'golden',
-      targetMood: this.flags.mood ?? 'golden',
+      mood: initialMood,
+      targetMood: initialMood,
     });
 
     if (options.canvas) {
@@ -86,6 +93,9 @@ export class App {
     this.scene.add(this.grass.mesh);
     this.scene.add(this.tree.mesh);
 
+    // Initial mood setup across all world systems
+    this.applyCurrentMood();
+
     if (this.flags.debug) {
       this.statsOverlay = new StatsOverlay();
     }
@@ -101,10 +111,41 @@ export class App {
       if (state.quality !== prev.quality) {
         this.grass.setTier(state.quality);
       }
+      if (state.targetMood !== prev.targetMood) {
+        this.moodController.setMood(state.targetMood);
+      }
     });
+
+    if (typeof window !== 'undefined') {
+      this.keydownHandler = (e: KeyboardEvent) => {
+        if (
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement ||
+          e.target instanceof HTMLSelectElement
+        ) {
+          return;
+        }
+
+        if (e.key === '1') {
+          this.setMood('dawn');
+        } else if (e.key === '2') {
+          this.setMood('golden');
+        } else if (e.key === '3') {
+          this.setMood('night');
+        }
+      };
+      window.addEventListener('keydown', this.keydownHandler);
+    }
 
     this.loop.subscribe((dt, elapsed) => {
       this.currentFps = dt > 0 ? 1 / dt : 60;
+
+      this.moodController.update(dt);
+      if (this.moodController.state.isFading) {
+        this.applyCurrentMood();
+      } else if (this.store.getState().mood !== this.moodController.state.currentMood) {
+        this.store.setState({ mood: this.moodController.state.currentMood });
+      }
 
       this.cameraRig.update(dt);
       this.sky.update(elapsed, this.cameraRig.camera.position);
@@ -126,6 +167,15 @@ export class App {
     });
   }
 
+  private applyCurrentMood(): void {
+    const s = this.moodController.state;
+    this.sky.applyMood(s);
+    this.terrain.applyMood(s);
+    this.grass.applyMood(s);
+    this.ridges.applyMood(s);
+    this.tree.applyMood(s);
+  }
+
   public boot(): void {
     this.loop.start();
     this.store.setState({ phase: 'ready' });
@@ -139,6 +189,15 @@ export class App {
   public setQuality(tier: QualityTier): void {
     this.store.setState({ quality: tier });
     this.grass.setTier(tier);
+  }
+
+  public setMood(mood: MoodName, immediate = false): void {
+    this.store.setState({ targetMood: mood });
+    this.moodController.setMood(mood, immediate);
+    if (immediate) {
+      this.store.setState({ mood });
+      this.applyCurrentMood();
+    }
   }
 
   public getStats(): {
@@ -159,6 +218,10 @@ export class App {
   }
 
   public dispose(): void {
+    if (this.keydownHandler && typeof window !== 'undefined') {
+      window.removeEventListener('keydown', this.keydownHandler);
+      this.keydownHandler = null;
+    }
     this.loop.dispose();
     this.sky.dispose();
     this.ridges.dispose();
