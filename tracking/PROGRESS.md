@@ -1,8 +1,8 @@
 # PROGRESS — the agent's live log (update after EVERY task and gate)
 
 **Current milestone:** M6 (Lie-down + parallax + idle — G5)
-**Current state:** planning
-**Last updated:** 2026-10-19 20:44
+**Current state:** awaiting human approval (Gate G5)
+**Last updated:** 2026-10-19 21:40
 **Open blockers:** none
 
 ## Milestone checklist
@@ -56,6 +56,11 @@ Format: `YYYY-MM-DD HH:MM | Mx | task | result | commit-sha | evidence-path`
 2026-10-19 20:07 | M5 | Task 5.4 HandCursor with organic motion and SVGs | pass | 0dd4262 | tracking/evidence/M5/README.md
 2026-10-19 20:09 | M5 | Task 5.5 App loop integration & grass trail uniform wiring | pass | d7d0bab | tracking/evidence/M5/README.md
 2026-10-19 20:33 | M5 | Task 5.6 Playwright sweep, spring recovery sequence, and cursor tests | pass | 138972c | tracking/evidence/M5/README.md
+2026-10-19 21:05 | M6 | Task 6.1 GestureClassifier with tap, hold, and boundary logic | pass | c112ebc | tracking/evidence/M6/README.md
+2026-10-19 21:12 | M6 | Task 6.2 CameraRig dip pose, doubled parallax, idle drift, reduced motion | pass | 87d778d | tracking/evidence/M6/README.md
+2026-10-19 21:18 | M6 | Task 6.3 Vignette overlay, HUD lie-down dimming, cursor hold auto-hide | pass | 7d54e44 | tracking/evidence/M6/README.md
+2026-10-19 21:24 | M6 | Task 6.4 App loop integration, inactivity timer, idle gust wiring | pass | bb043c4 | tracking/evidence/M6/README.md
+2026-10-19 21:35 | M6 | Task 6.5 Playwright E2E lie-down, idle, terrain clearance & screenshots | pass | a0cc900 | tracking/evidence/M6/README.md
 
 ## Attempt log (for failing checks; max 3 per check)
 
@@ -65,6 +70,7 @@ M3 | Shader compile | 1 | GLSL ES 3 reserved word 'patch' in grass.frag.glsl | R
 M4 | Playwright E2E | 1 | Bundling 3 page loads + screenshots into 1 test exceeded 60s in SwiftShader | Split into separate tests per mood screenshot | pass
 M5 | Playwright E2E | 1 | 5 sequential screenshots exceeded default 60s in SwiftShader CPU emulation | Set test.setTimeout(120000) on screenshot sequence test | pass
 M5 | Loop.ts freeze | 1 | Loop.ts was advancing time with dt=fixedDt on rAF when frozen | Set dt=0 on frozen rAF ticks so time only advances via explicit step(dt) | pass
+M6 | Playwright E2E | 1 | Entry overlay obscured lie-down screenshots and SwiftShader 2-screenshot capture timed out at 30s | Added display:none to .entry-overlay.hidden and set test.setTimeout(120000) | pass
 
 ## Agent-proposed decisions (see ADR file)
 
