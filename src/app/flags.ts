@@ -1,5 +1,5 @@
-export type QualityTier = 'high' | 'medium' | 'low';
-export type MoodName = 'dawn' | 'golden' | 'night';
+import type { QualityTier, MoodName } from '../core/types';
+export type { QualityTier, MoodName };
 
 export interface AppFlags {
   quality: QualityTier | null;
