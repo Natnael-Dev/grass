@@ -13,7 +13,7 @@ Repo: https://github.com/Natnael-Dev/grass
 | G1 (M2)               | approved | 2026-10-19 | approved by human in chat |
 | G2 (M3)               | approved | 2026-10-19 | approved by human in chat |
 | G3 (M4)               | approved | 2026-10-19 | approved by human in chat |
-| G4 (M5)               | pending  |            |                           |
+| G4 (M5)               | approved | 2026-10-19 | approved by human in chat |
 | G5 (M6)               | pending  |            |                           |
 | G6 (M7)               | pending  |            |                           |
 | G7 (M8)               | pending  |            |                           |
