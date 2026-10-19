@@ -24,6 +24,8 @@ export class HandCursor {
 
   private isVisible = false;
   private hasPosition = false;
+  private isHolding = false;
+  private holdDuration = 0;
 
   private static readonly SVG_OPEN = `<svg viewBox="0 0 32 32" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M12 28 C9 28 8 25 8 21 L8 14 C8 12.5 9 11.5 10.5 11.5 C12 11.5 12.5 12.5 12.5 14 L12.5 10 C12.5 8.5 13.5 7.5 15 7.5 C16.5 7.5 17 8.5 17 10 L17 9 C17 7.5 18 6.5 19.5 6.5 C21 6.5 21.5 7.5 21.5 9 L21.5 12 C21.5 11 22.5 10 23.8 10 C25.2 10 25.5 11 25.5 12.5 L25.5 20 C25.5 25 22 28 17 28 Z" fill="#fffbf0" stroke="#262f22" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -92,15 +94,25 @@ export class HandCursor {
     }
   }
 
+  public setHolding(holding: boolean): void {
+    if (this.isHolding !== holding) {
+      this.isHolding = holding;
+      if (!holding) {
+        this.holdDuration = 0;
+      }
+    }
+  }
+
   /**
    * Updates hand cursor physics and visual appearance per frame:
    * - Soft position tracking with factor 0.35/frame.
    * - Rotation clamped to +/- 12 degrees when moving over terrain.
    * - Automatic hiding for touch/pen or when pointer leaves canvas.
    * - Forced open state and 0 rotation when pointing at the sky.
+   * - Shows pressed fist during hold, auto-hides after 1.0s.
    */
   public update(
-    _dt: number,
+    dt: number,
     pointerInput: HandCursorPointerInput,
     isOverTerrain: boolean,
     virtualScreenPos?: { x: number; y: number } | null,
@@ -108,8 +120,14 @@ export class HandCursor {
   ): void {
     const isTouchOrPen = pointerInput.pointerType === 'touch' || pointerInput.pointerType === 'pen';
 
+    if (this.isHolding) {
+      this.holdDuration += dt;
+    }
+
     // 1. Visibility check
-    if (virtualScreenPos) {
+    if (this.isHolding && this.holdDuration >= 1.0) {
+      this.isVisible = false;
+    } else if (virtualScreenPos) {
       this.isVisible = true;
       this.targetX = virtualScreenPos.x;
       this.targetY = virtualScreenPos.y;
@@ -141,7 +159,7 @@ export class HandCursor {
 
     // 3. State determination
     let nextState: HandCursorState = 'open';
-    if (pointerInput.isDown) {
+    if (this.isHolding || pointerInput.isDown) {
       nextState = 'pressed';
       this.targetRot = 0;
     } else if (
