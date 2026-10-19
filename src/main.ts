@@ -20,6 +20,9 @@ export interface GrassDebugApi {
   freeze: (on: boolean) => void;
   step: (dt: number) => void;
   enter: () => void;
+  spawnSeeds: (x?: number, z?: number) => void;
+  getSeedsCount: () => number;
+  getFirefliesCount: () => number;
 }
 
 declare global {
@@ -79,6 +82,11 @@ function boot(): void {
           app.enter();
           overlay?.classList.add('hidden');
         },
+        spawnSeeds: (x?: number, z?: number) => {
+          app.spawnSeeds(x, z);
+        },
+        getSeedsCount: () => app.getSeedsCount(),
+        getFirefliesCount: () => app.getFirefliesCount(),
       };
     }
   } catch (error) {
