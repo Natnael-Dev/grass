@@ -72,11 +72,11 @@ void main() {
   vec3 baseColor = mix(uGrassBase, uGrassTip, pow(vH, 1.2));
 
   // 2. Large-scale meadow patch variation (lighter/darker patches)
-  float patch = mix(0.88, 1.12, patchNoise(vWorld.xz * 0.05));
+  float meadowPatch = mix(0.88, 1.12, patchNoise(vWorld.xz * 0.05));
 
   // 3. Per-blade lightness/hue jitter
   float bladeJitter = mix(0.92, 1.08, vRand);
-  vec3 albedo = baseColor * patch * bladeJitter;
+  vec3 albedo = baseColor * meadowPatch * bladeJitter;
 
   // 4. Root ambient occlusion (darkens blade root to 55%)
   float rootAO = mix(0.55, 1.0, smoothstep(0.0, 0.5, vH));
