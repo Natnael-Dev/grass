@@ -1,8 +1,8 @@
 # PROGRESS — the agent's live log (update after EVERY task and gate)
 
-**Current milestone:** M6 (Lie-down + parallax + idle — G5)
-**Current state:** awaiting human approval (Gate G5)
-**Last updated:** 2026-10-19 21:40
+**Current milestone:** M7 (Seeds + fireflies — G6)
+**Current state:** planning
+**Last updated:** 2026-10-19 21:43
 **Open blockers:** none
 
 ## Milestone checklist
@@ -15,7 +15,7 @@ Mark `[x]` only when the gate passed AND evidence exists AND (strict mode) the h
 - [x] M3 Grass + wind (G2) — evidence: tracking/evidence/M3/
 - [x] M4 Mood system (G3) — evidence: tracking/evidence/M4/
 - [x] M5 Brush + hand cursor (G4) — evidence: tracking/evidence/M5/
-- [ ] M6 Lie-down + parallax + idle (G5)
+- [x] M6 Lie-down + parallax + idle (G5) — evidence: tracking/evidence/M6/
 - [ ] M7 Seeds + fireflies (G6)
 - [ ] M8 UI shell + hints + easter eggs (G7)
 - [ ] M9 Audio (G8)
