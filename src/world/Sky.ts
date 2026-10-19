@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { MoodState } from './MoodController';
 import skyVert from './shaders/sky.vert.glsl?raw';
 import skyFrag from './shaders/sky.frag.glsl?raw';
 
@@ -17,6 +18,8 @@ export class Sky {
   public readonly uHalo = { value: 0.45 };
   public readonly uCloudColor = { value: new THREE.Color('#fff0d8') };
   public readonly uCloudCover = { value: 0.4 };
+  public readonly uStarsAmount = { value: 0.0 };
+  public readonly uFogColor = { value: new THREE.Color('#f3cf9f') };
   public readonly uTime = { value: 0.0 };
 
   constructor() {
@@ -38,6 +41,8 @@ export class Sky {
         uHalo: this.uHalo,
         uCloudColor: this.uCloudColor,
         uCloudCover: this.uCloudCover,
+        uStarsAmount: this.uStarsAmount,
+        uFogColor: this.uFogColor,
         uTime: this.uTime,
       },
     });
@@ -68,6 +73,20 @@ export class Sky {
 
   public getSunDirection(): THREE.Vector3 {
     return this.uSunDir.value;
+  }
+
+  public applyMood(mood: MoodState): void {
+    this.uSkyTop.value.copy(mood.skyTop);
+    this.uSkyMid.value.copy(mood.skyMid);
+    this.uSkyHorizon.value.copy(mood.skyHorizon);
+    this.uDiscColor.value.copy(mood.discColor);
+    this.uSunDir.value.copy(mood.discDir);
+    this.uDiscSize.value = mood.discSize;
+    this.uHalo.value = mood.discHalo;
+    this.uCloudColor.value.copy(mood.cloudColor);
+    this.uCloudCover.value = mood.cloudCover;
+    this.uStarsAmount.value = mood.starsAmount;
+    this.uFogColor.value.copy(mood.fogColor);
   }
 
   public dispose(): void {
