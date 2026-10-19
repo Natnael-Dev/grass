@@ -15,6 +15,7 @@ export interface HintLineOptions {
 export class HintLine {
   public readonly element: HTMLElement;
   private reducedMotion: boolean;
+  private currentText = '';
   private typeIntervalId: ReturnType<typeof setInterval> | null = null;
   private holdTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private fadeTimeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -70,8 +71,9 @@ export class HintLine {
     this.reducedMotion = reduced;
   }
 
-  public show(text: string, holdMs = 6000): void {
+  public show(text: string, holdMs = 6000, immediate = false): void {
     this.clearTimers();
+    this.currentText = text;
 
     this.element.style.display = 'block';
     // Trigger layout before animating opacity
@@ -79,7 +81,7 @@ export class HintLine {
     this.element.style.opacity = '1';
     this.isVisible = true;
 
-    if (this.reducedMotion) {
+    if (immediate || this.reducedMotion) {
       this.element.textContent = text;
       this.holdTimeoutId = setTimeout(() => {
         this.fadeOut();
@@ -87,14 +89,17 @@ export class HintLine {
       return;
     }
 
-    // Typed effect at 28 ms / char
-    let charIndex = 0;
+    // Typed effect at 28 ms / char based on elapsed time to avoid headless timer clamping
+    const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
     this.element.textContent = '';
-    this.typeIntervalId = setInterval(() => {
-      charIndex++;
-      this.element.textContent = text.slice(0, charIndex);
 
-      if (charIndex >= text.length) {
+    const tick = () => {
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      const elapsed = Math.max(0, now - startTime);
+      const targetCharCount = Math.min(text.length, Math.max(1, Math.floor(elapsed / 28)));
+      this.element.textContent = text.slice(0, targetCharCount);
+
+      if (targetCharCount >= text.length) {
         if (this.typeIntervalId !== null) {
           clearInterval(this.typeIntervalId);
           this.typeIntervalId = null;
@@ -103,7 +108,26 @@ export class HintLine {
           this.fadeOut();
         }, holdMs);
       }
-    }, 28);
+    };
+
+    if (text.length > 0) {
+      this.typeIntervalId = setInterval(tick, 28);
+    }
+  }
+
+  public skipTyping(): void {
+    if (this.typeIntervalId !== null) {
+      clearInterval(this.typeIntervalId);
+      this.typeIntervalId = null;
+    }
+    if (this.currentText) {
+      this.element.textContent = this.currentText;
+    }
+    if (this.holdTimeoutId === null && this.isVisible) {
+      this.holdTimeoutId = setTimeout(() => {
+        this.fadeOut();
+      }, 6000);
+    }
   }
 
   public fadeOut(): void {
