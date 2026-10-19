@@ -27,6 +27,13 @@ export class PRNG {
   }
 
   /**
+   * Alias for next() matching Math.random convention.
+   */
+  public random(): number {
+    return this.next();
+  }
+
+  /**
    * Returns a float in [min, max).
    */
   public range(min: number, max: number): number {
