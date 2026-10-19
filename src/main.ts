@@ -14,6 +14,9 @@ export interface GrassDebugApi {
   };
   setTier: (tier: QualityTier) => void;
   setMood: (m: MoodName) => void;
+  setLying: (lying: boolean) => void;
+  setIdle: (idle: boolean) => void;
+  advanceIdle: (seconds: number) => void;
   freeze: (on: boolean) => void;
   step: (dt: number) => void;
   enter: () => void;
@@ -56,6 +59,15 @@ function boot(): void {
         },
         setMood: (m: MoodName) => {
           app.setMood(m);
+        },
+        setLying: (l: boolean) => {
+          app.setLying(l);
+        },
+        setIdle: (i: boolean) => {
+          app.setIdle(i);
+        },
+        advanceIdle: (s: number) => {
+          app.advanceIdle(s);
         },
         freeze: (on: boolean) => {
           app.loop.setFrozen(on);
