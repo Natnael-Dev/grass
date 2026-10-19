@@ -1,8 +1,8 @@
 # PROGRESS — the agent's live log (update after EVERY task and gate)
 
-**Current milestone:** M4 (Mood system — G3)
-**Current state:** complete-approved
-**Last updated:** 2026-10-19 19:48
+**Current milestone:** M5 (Brush interaction + hand cursor — G4)
+**Current state:** automated-gate-passed (awaiting G4 human approval)
+**Last updated:** 2026-10-19 20:35
 **Open blockers:** none
 
 ## Milestone checklist
@@ -50,6 +50,12 @@ Format: `YYYY-MM-DD HH:MM | Mx | task | result | commit-sha | evidence-path`
 2026-10-19 19:12 | M4 | Task 4.4 wire MoodState to world systems | pass | 2de09f5 | tracking/evidence/M4/README.md
 2026-10-19 19:16 | M4 | Task 4.5 App loop integration & dev keys 1, 2, 3 | pass | f05f730 | tracking/evidence/M4/README.md
 2026-10-19 19:30 | M4 | Task 4.6 E2E mood crossfade verification & screenshot capture | pass | ac95768 | tracking/evidence/M4/README.md
+2026-10-19 19:58 | M5 | Task 5.1 GroundRaycaster analytic terrain binary refinement | pass | 0ecb3db | tracking/evidence/M5/README.md
+2026-10-19 20:02 | M5 | Task 5.2 BrushTrail ring buffer & spring response curve | pass | 70c9d06 | tracking/evidence/M5/README.md
+2026-10-19 20:05 | M5 | Task 5.3 unified Pointer listener and KeyboardBrush | pass | 7058a11 | tracking/evidence/M5/README.md
+2026-10-19 20:07 | M5 | Task 5.4 HandCursor with organic motion and SVGs | pass | 0dd4262 | tracking/evidence/M5/README.md
+2026-10-19 20:09 | M5 | Task 5.5 App loop integration & grass trail uniform wiring | pass | d7d0bab | tracking/evidence/M5/README.md
+2026-10-19 20:33 | M5 | Task 5.6 Playwright sweep, spring recovery sequence, and cursor tests | pass | 138972c | tracking/evidence/M5/README.md
 
 ## Attempt log (for failing checks; max 3 per check)
 
@@ -57,6 +63,8 @@ Format: `Mx | check | attempt # | hypothesis | change | result`
 M3 | Playwright E2E | 1 | SwiftShader software WebGL execution timed out at 30s | Set test.setTimeout(60000) and playwright.config timeout: 60000 | pass
 M3 | Shader compile | 1 | GLSL ES 3 reserved word 'patch' in grass.frag.glsl | Renamed patch to meadowPatch | pass
 M4 | Playwright E2E | 1 | Bundling 3 page loads + screenshots into 1 test exceeded 60s in SwiftShader | Split into separate tests per mood screenshot | pass
+M5 | Playwright E2E | 1 | 5 sequential screenshots exceeded default 60s in SwiftShader CPU emulation | Set test.setTimeout(120000) on screenshot sequence test | pass
+M5 | Loop.ts freeze | 1 | Loop.ts was advancing time with dt=fixedDt on rAF when frozen | Set dt=0 on frozen rAF ticks so time only advances via explicit step(dt) | pass
 
 ## Agent-proposed decisions (see ADR file)
 
