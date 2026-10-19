@@ -72,3 +72,11 @@ export class PRNG {
     return item;
   }
 }
+
+/**
+ * Returns a closure function generating pseudo-random floats in [0, 1).
+ */
+export function mulberry32(seed = 1337): () => number {
+  const prng = new PRNG(seed);
+  return () => prng.next();
+}
