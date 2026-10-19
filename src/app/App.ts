@@ -14,7 +14,9 @@ import { BrushTrail } from '../world/BrushTrail';
 import { GroundRaycaster } from '../input/GroundRaycaster';
 import { Pointer } from '../input/Pointer';
 import { KeyboardBrush } from '../input/KeyboardBrush';
+import { GestureClassifier } from '../input/GestureClassifier';
 import { HandCursor } from '../ui/HandCursor';
+import { Vignette } from '../ui/Vignette';
 import { parseFlags, type AppFlags, type QualityTier, type MoodName } from './flags';
 import { detectCapabilities, type Capabilities } from './capabilities';
 import { Store } from './store';
@@ -48,7 +50,13 @@ export class App {
   public readonly groundRaycaster: GroundRaycaster;
   public readonly brushTrail: BrushTrail;
   public readonly keyboardBrush: KeyboardBrush;
+  public readonly gestureClassifier: GestureClassifier;
   public readonly handCursor: HandCursor;
+  public readonly vignette: Vignette;
+
+  // Idle tracking
+  private idleInactivityTimer = 0;
+  public ee2Triggered = false;
 
   // Pre-allocated scratch vectors to prevent per-frame GC allocations
   private readonly prevGroundHit = new THREE.Vector3();
@@ -61,6 +69,9 @@ export class App {
   public readonly statsOverlay: StatsOverlay | null = null;
   private currentFps = 60;
   private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
+  private keyupHandler: ((e: KeyboardEvent) => void) | null = null;
+  private blurHandler: (() => void) | null = null;
+  private visibilityHandler: (() => void) | null = null;
 
   constructor(options: AppOptions = {}) {
     this.flags = options.flags ?? parseFlags();
@@ -101,6 +112,7 @@ export class App {
 
     const initialAspect = (this.canvas.clientWidth || 800) / (this.canvas.clientHeight || 600);
     this.cameraRig = new CameraRig({ aspect: initialAspect });
+    this.cameraRig.setReducedMotion(this.capabilities.reducedMotion);
 
     this.sky = new Sky();
     this.ridges = new Ridges();
@@ -117,6 +129,12 @@ export class App {
     this.scene.add(this.grass.mesh);
     this.scene.add(this.tree.mesh);
 
+    // Vignette overlay
+    this.vignette = new Vignette(undefined, {
+      baseIntensity: this.moodController.state.vignette,
+      reducedMotion: this.capabilities.reducedMotion,
+    });
+
     // Initial mood setup across all world systems
     this.applyCurrentMood();
 
@@ -126,6 +144,40 @@ export class App {
     this.brushTrail = new BrushTrail(this.store.getState().quality);
     this.keyboardBrush = new KeyboardBrush();
     this.handCursor = new HandCursor();
+    this.gestureClassifier = new GestureClassifier();
+
+    // Wire GestureClassifier events
+    this.gestureClassifier.on('holdStart', () => {
+      this.setLying(true);
+    });
+
+    this.gestureClassifier.on('holdEnd', () => {
+      this.setLying(false);
+    });
+
+    this.gestureClassifier.on('ee2Trigger', () => {
+      this.ee2Triggered = true;
+      console.info('> fatal: no merge conflicts in this meadow.');
+    });
+
+    // Wire Pointer events into GestureClassifier and idle tracker
+    this.pointer.onDown = (x, y) => {
+      this.resetIdle();
+      this.gestureClassifier.onPointerDown(x, y);
+    };
+
+    this.pointer.onMove = (x, y) => {
+      this.resetIdle();
+      this.gestureClassifier.onPointerMove(x, y);
+    };
+
+    this.pointer.onUp = (x, y) => {
+      this.gestureClassifier.onPointerUp(x, y);
+    };
+
+    this.pointer.onCancel = () => {
+      this.gestureClassifier.onPointerCancel();
+    };
 
     if (this.flags.debug) {
       this.statsOverlay = new StatsOverlay();
@@ -146,10 +198,16 @@ export class App {
       if (state.targetMood !== prev.targetMood) {
         this.moodController.setMood(state.targetMood);
       }
+      if (state.reducedMotion !== prev.reducedMotion) {
+        this.cameraRig.setReducedMotion(state.reducedMotion);
+        this.vignette.setReducedMotion(state.reducedMotion);
+      }
     });
 
     if (typeof window !== 'undefined') {
       this.keydownHandler = (e: KeyboardEvent) => {
+        this.resetIdle();
+
         if (
           (typeof HTMLInputElement !== 'undefined' && e.target instanceof HTMLInputElement) ||
           (typeof HTMLTextAreaElement !== 'undefined' && e.target instanceof HTMLTextAreaElement) ||
@@ -157,6 +215,8 @@ export class App {
         ) {
           return;
         }
+
+        this.gestureClassifier.onKeyDown(e);
 
         if (e.key === '1') {
           this.setMood('dawn');
@@ -166,7 +226,27 @@ export class App {
           this.setMood('night');
         }
       };
+
+      this.keyupHandler = (e: KeyboardEvent) => {
+        this.gestureClassifier.onKeyUp(e);
+      };
+
+      this.blurHandler = () => {
+        this.gestureClassifier.reset();
+      };
+
+      this.visibilityHandler = () => {
+        if (typeof document !== 'undefined' && document.hidden) {
+          this.gestureClassifier.reset();
+        }
+      };
+
       window.addEventListener('keydown', this.keydownHandler);
+      window.addEventListener('keyup', this.keyupHandler);
+      window.addEventListener('blur', this.blurHandler);
+      if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', this.visibilityHandler);
+      }
     }
 
     this.loop.subscribe((dt, elapsed) => {
@@ -179,18 +259,35 @@ export class App {
         this.store.setState({ mood: this.moodController.state.currentMood });
       }
 
+      // 1. Gesture and Idle timers
+      this.gestureClassifier.update();
+      this.idleInactivityTimer += dt;
+      if (this.idleInactivityTimer >= 25.0) {
+        this.cameraRig.setIdle(true);
+      }
+
+      // 2. Parallax Target from Pointer NDC
+      this.cameraRig.setParallaxTarget(this.pointer.state.ndcX, this.pointer.state.ndcY);
+
+      // 3. Camera and World System updates
       this.cameraRig.update(dt);
+      this.vignette.update(dt);
       this.sky.update(elapsed, this.cameraRig.camera.position);
       this.tree.update(elapsed);
+
+      // Wind gust factor during idle
+      const idleGustFactor = this.cameraRig.getIdleGustFactor();
+      this.grass.uWindStrength.value = this.moodController.state.windStrength * idleGustFactor;
       this.grass.update(elapsed, this.cameraRig.camera.position);
 
-      // 1. Process Virtual Keyboard Brush or Pointer
+      // 4. Process Virtual Keyboard Brush or Pointer
       this.keyboardBrush.update(dt);
       let groundHit: THREE.Vector3 | null = null;
       let groundSpeed = 0;
       let hasVirtualScreenPos = false;
 
       if (this.keyboardBrush.isActive) {
+        this.resetIdle();
         const kx = this.keyboardBrush.groundPos.x;
         const kz = this.keyboardBrush.groundPos.z;
         this.scratchGroundHit.set(kx, terrainHeight(kx, kz), kz);
@@ -235,16 +332,16 @@ export class App {
         groundSpeed = this.pointer.getSmoothedGroundSpeed();
       }
 
-      // 2. Brush Interaction: push into trail if hit ground and not in lie-down mode
+      // 5. Brush Interaction: push into trail if hit ground and not in lie-down mode
       if (groundHit && !this.cameraRig.getIsLying()) {
         this.brushTrail.maybePush(groundHit, groundSpeed, this.cameraRig.camera.position);
       }
 
-      // 3. Update brush trail spring response & pack into grass uniforms
+      // 6. Update brush trail spring response & pack into grass uniforms
       this.brushTrail.update(dt);
       this.brushTrail.writeUniforms(this.grass.uTrail.value, this.grass.uTrailCount);
 
-      // 4. Update Hand Cursor
+      // 7. Update Hand Cursor
       this.handCursor.update(
         dt,
         this.pointer.state,
@@ -280,6 +377,7 @@ export class App {
     this.grass.applyMood(s);
     this.ridges.applyMood(s);
     this.tree.applyMood(s);
+    this.vignette.setBaseIntensity(s.vignette);
   }
 
   public boot(): void {
@@ -304,6 +402,41 @@ export class App {
     if (immediate) {
       this.store.setState({ mood });
       this.applyCurrentMood();
+    }
+  }
+
+  public setLying(lying: boolean): void {
+    this.store.setState({ lying });
+    this.cameraRig.setLying(lying);
+    this.vignette.setLying(lying);
+    this.handCursor.setHolding(lying);
+    if (typeof document !== 'undefined') {
+      if (lying) {
+        document.body.classList.add('lying');
+      } else {
+        document.body.classList.remove('lying');
+      }
+    }
+  }
+
+  public setIdle(idle: boolean): void {
+    this.cameraRig.setIdle(idle);
+    if (!idle) {
+      this.idleInactivityTimer = 0;
+    }
+  }
+
+  public advanceIdle(seconds: number): void {
+    this.idleInactivityTimer += seconds;
+    if (this.idleInactivityTimer >= 25.0) {
+      this.cameraRig.setIdle(true);
+    }
+  }
+
+  public resetIdle(): void {
+    this.idleInactivityTimer = 0;
+    if (this.cameraRig.getIsIdle()) {
+      this.cameraRig.setIdle(false);
     }
   }
 
@@ -333,9 +466,23 @@ export class App {
       window.removeEventListener('keydown', this.keydownHandler);
       this.keydownHandler = null;
     }
+    if (this.keyupHandler && typeof window !== 'undefined') {
+      window.removeEventListener('keyup', this.keyupHandler);
+      this.keyupHandler = null;
+    }
+    if (this.blurHandler && typeof window !== 'undefined') {
+      window.removeEventListener('blur', this.blurHandler);
+      this.blurHandler = null;
+    }
+    if (this.visibilityHandler && typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+      this.visibilityHandler = null;
+    }
     this.pointer.dispose();
     this.keyboardBrush.dispose();
+    this.gestureClassifier.dispose();
     this.handCursor.dispose();
+    this.vignette.dispose();
     this.loop.dispose();
     this.sky.dispose();
     this.ridges.dispose();

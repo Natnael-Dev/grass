@@ -29,6 +29,11 @@ export class Pointer {
     activePointerId: null,
   };
 
+  public onDown?: (clientX: number, clientY: number) => void;
+  public onMove?: (clientX: number, clientY: number) => void;
+  public onUp?: (clientX: number, clientY: number) => void;
+  public onCancel?: () => void;
+
   private readonly canvas: HTMLCanvasElement;
   private readonly speedHistory = [0, 0, 0];
   private speedIndex = 0;
@@ -110,6 +115,8 @@ export class Pointer {
     } catch {
       // Ignored for environments without full setPointerCapture support
     }
+
+    this.onDown?.(e.clientX, e.clientY);
   }
 
   private handlePointerMove(e: PointerEvent): void {
@@ -119,12 +126,14 @@ export class Pointer {
 
     this.state.isInside = true;
     this.updateCoordinates(e);
+    this.onMove?.(e.clientX, e.clientY);
   }
 
   private handlePointerUp(e: PointerEvent): void {
     if (this.state.activePointerId === e.pointerId) {
       this.state.isDown = false;
       this.state.activePointerId = null;
+      this.onUp?.(e.clientX, e.clientY);
     }
   }
 
@@ -147,6 +156,7 @@ export class Pointer {
     this.state.activePointerId = null;
     this.state.deltaX = 0;
     this.state.deltaY = 0;
+    this.onCancel?.();
   }
 
   public resetDelta(): void {
