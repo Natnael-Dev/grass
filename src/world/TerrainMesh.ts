@@ -19,7 +19,7 @@ export class TerrainMesh {
   public readonly geometry: THREE.PlaneGeometry;
   public readonly material: THREE.ShaderMaterial;
 
-  public readonly uTerrainColor = { value: new THREE.Color('#4a7a3a') };
+  public readonly uTerrainColor = { value: new THREE.Color('#3d7a3a') };
   public readonly uLightColor = { value: new THREE.Color('#ffcf8a') };
   public readonly uLightIntensity = { value: 1.1 };
   public readonly uAmbientColor = { value: new THREE.Color('#a8a0b0') };

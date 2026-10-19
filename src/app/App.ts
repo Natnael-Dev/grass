@@ -6,7 +6,8 @@ import { Sky } from '../world/Sky';
 import { Ridges } from '../world/Ridges';
 import { TerrainMesh } from '../world/TerrainMesh';
 import { Tree } from '../world/Tree';
-import { parseFlags, type AppFlags } from './flags';
+import { Grass } from '../world/Grass';
+import { parseFlags, type AppFlags, type QualityTier } from './flags';
 import { detectCapabilities, type Capabilities } from './capabilities';
 import { Store } from './store';
 import { StatsOverlay } from '../debug/StatsOverlay';
@@ -31,6 +32,7 @@ export class App {
   public readonly ridges: Ridges;
   public readonly terrain: TerrainMesh;
   public readonly tree: Tree;
+  public readonly grass: Grass;
 
   // Debug overlay
   public readonly statsOverlay: StatsOverlay | null = null;
@@ -73,10 +75,15 @@ export class App {
     this.ridges = new Ridges();
     this.terrain = new TerrainMesh();
     this.tree = new Tree();
+    this.grass = new Grass({
+      tier: this.store.getState().quality,
+      seed: this.flags.seed,
+    });
 
     this.scene.add(this.sky.mesh);
     this.scene.add(this.ridges.group);
     this.scene.add(this.terrain.mesh);
+    this.scene.add(this.grass.mesh);
     this.scene.add(this.tree.mesh);
 
     if (this.flags.debug) {
@@ -90,12 +97,19 @@ export class App {
       this.cameraRig.onResize(aspect);
     });
 
+    this.store.subscribe((state, prev) => {
+      if (state.quality !== prev.quality) {
+        this.grass.setTier(state.quality);
+      }
+    });
+
     this.loop.subscribe((dt, elapsed) => {
       this.currentFps = dt > 0 ? 1 / dt : 60;
 
       this.cameraRig.update(dt);
       this.sky.update(elapsed, this.cameraRig.camera.position);
       this.tree.update(elapsed);
+      this.grass.update(elapsed, this.cameraRig.camera.position);
 
       this.renderer.render(this.scene, this.cameraRig.camera);
 
@@ -106,7 +120,7 @@ export class App {
           tier: this.store.getState().quality,
           drawCalls: info.drawCalls,
           triangles: info.triangles,
-          blades: 0,
+          blades: this.grass.instanceCount,
         });
       }
     });
@@ -122,6 +136,11 @@ export class App {
     this.store.setState({ phase: 'running' });
   }
 
+  public setQuality(tier: QualityTier): void {
+    this.store.setState({ quality: tier });
+    this.grass.setTier(tier);
+  }
+
   public getStats(): {
     fps: number;
     tier: string;
@@ -135,7 +154,7 @@ export class App {
       tier: this.store.getState().quality,
       drawCalls: info.drawCalls,
       triangles: info.triangles,
-      blades: 0,
+      blades: this.grass.instanceCount,
     };
   }
 
@@ -145,6 +164,7 @@ export class App {
     this.ridges.dispose();
     this.terrain.dispose();
     this.tree.dispose();
+    this.grass.dispose();
     this.statsOverlay?.dispose();
     this.renderer.dispose();
   }

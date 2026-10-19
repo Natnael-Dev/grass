@@ -30,7 +30,7 @@ describe('TerrainMesh', () => {
 
   it('exposes mood uniforms and disposes cleanly', () => {
     const terrain = new TerrainMesh();
-    expect(terrain.uTerrainColor.value.getHexString()).toBe('4a7a3a');
+    expect(terrain.uTerrainColor.value.getHexString()).toBe('3d7a3a');
     expect(terrain.uFogColor.value.getHexString()).toBe('f3cf9f');
     expect(terrain.uFogDensity.value).toBe(0.016);
 
