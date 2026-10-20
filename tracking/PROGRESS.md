@@ -1,8 +1,8 @@
 # PROGRESS — the agent's live log (update after EVERY task and gate)
 
-**Current milestone:** M11 (Performance + adaptive quality — G10)
-**Current state:** Gate G10 stopped for human review
-**Last updated:** 2026-10-20 23:10
+**Current milestone:** M12 (Hardening + full QA audit + traceability — G11)
+**Current state:** ready for M12 planning
+**Last updated:** 2026-10-20 23:22
 **Open blockers:** none
 
 ## Milestone checklist
@@ -20,7 +20,7 @@ Mark `[x]` only when the gate passed AND evidence exists AND (strict mode) the h
 - [x] M8 UI shell + hints + easter eggs (G7) — evidence: tracking/evidence/M8/
 - [x] M9 Audio (G8) — evidence: tracking/evidence/M9/
 - [x] M10 Mobile/a11y/fallbacks (G9) — evidence: tracking/evidence/M10/README.md
-- [ ] M11 Performance + adaptive quality (G10)
+- [x] M11 Performance + adaptive quality (G10) — evidence: tracking/evidence/M11/README.md
 - [ ] M12 Hardening + QA audit (G11)
 - [ ] M13 Release (G12)
 
@@ -80,7 +80,8 @@ Format: `YYYY-MM-DD HH:MM | Mx | task | result | commit-sha | evidence-path`
 2026-10-20 22:50 | M11 | Task 11.2 Wire AdaptiveQuality to App, Renderer DPR, and scene systems | pass | f912a72 | tracking/evidence/M11/README.md
 2026-10-20 22:53 | M11 | Task 11.3 Hot-path zero-allocation review, getStats p95, and disposal audit | pass | 80d62b0 | tracking/evidence/M11/README.md
 2026-10-20 23:04 | M11 | Task 11.4 Playwright performance benchmark suite | pass | 7263619 | tracking/evidence/M11/README.md
-2026-10-20 23:10 | M11 | Task 11.5 Gate G10 verification, evidence capture, stopped for human review | pass | HEAD | tracking/evidence/M11/README.md
+2026-10-20 23:10 | M11 | Task 11.5 Gate G10 verification, evidence capture, stopped for human review | pass | 7c86f5f | tracking/evidence/M11/README.md
+2026-10-20 23:22 | M11 | Gate G10 human approval recorded | pass | HEAD | tracking/USER-APPROVALS.md
 
 ## Attempt log (for failing checks; max 3 per check)
 
