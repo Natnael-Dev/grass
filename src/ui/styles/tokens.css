@@ -168,6 +168,109 @@ body.is-touch .btn-enter,
   }
 }
 
+/* Recovery Toast */
+.recovery-toast {
+  position: fixed;
+  top: max(24px, var(--safe-top));
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--panel-solid);
+  color: var(--text);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-pill);
+  padding: 10px 20px;
+  font-family: var(--font-mono);
+  font-size: var(--size-text-m);
+  z-index: 9999;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  animation: toastFadeIn var(--dur-med) var(--ease-out);
+}
+
+@keyframes toastFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Fallback Overlay */
+.fallback-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(
+    circle at center,
+    rgba(10, 14, 28, 0.88) 0%,
+    rgba(6, 11, 36, 0.98) 100%
+  );
+  z-index: 10000;
+  padding: 24px;
+  text-align: center;
+}
+
+.fallback-content {
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.fallback-title {
+  font-family: var(--font-mono);
+  font-size: clamp(24px, 4vw, 36px);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.fallback-body {
+  font-size: var(--size-text-m);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.btn-reload {
+  margin-top: 12px;
+  height: 44px;
+  padding: 0 24px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform var(--dur-fast) ease,
+    background-color var(--dur-fast) ease;
+}
+
+.btn-reload:hover {
+  transform: translateY(-1px);
+  background-color: #d2f78e;
+}
+
+.btn-reload:active {
+  transform: scale(0.97);
+}
+
+.btn-reload:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
 /* High contrast / forced colors */
 @media (forced-colors: active) {
   .glass-panel,

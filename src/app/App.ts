@@ -26,6 +26,7 @@ import { HowItWorks } from '../ui/HowItWorks';
 import { ExitScreen } from '../ui/ExitScreen';
 import { EasterEggs } from '../easter/eggs';
 import { Entry } from '../ui/Entry';
+import { FallbackScreen } from '../ui/FallbackScreen';
 import { safeStorage } from '../core/storage';
 import { parseFlags, type AppFlags, type QualityTier, type MoodName } from './flags';
 import { detectCapabilities, type Capabilities } from './capabilities';
@@ -80,6 +81,8 @@ export class App {
   public readonly exitScreen: ExitScreen;
   public readonly easterEggs: EasterEggs;
   public readonly entryScreen: Entry;
+  public readonly fallbackScreen: FallbackScreen;
+  private contextLostTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   // Audio systems
   public readonly audioEngine: AudioEngine;
@@ -155,6 +158,12 @@ export class App {
       canvas: this.canvas,
       dprCap: this.capabilities.dprCap,
       antialias: true,
+      onContextLost: () => {
+        this.handleContextLost();
+      },
+      onContextRestored: () => {
+        this.handleContextRestored();
+      },
     });
 
     const initialAspect = (this.canvas.clientWidth || 800) / (this.canvas.clientHeight || 600);
@@ -255,6 +264,8 @@ export class App {
       },
     });
     this.entryScreen.setReducedMotion(this.capabilities.reducedMotion);
+
+    this.fallbackScreen = new FallbackScreen();
 
     // Audio systems initialization
     this.audioEngine = new AudioEngine({ initialMuted: savedMuted });
@@ -633,6 +644,28 @@ export class App {
     this.vignette.setBaseIntensity(s.vignette);
   }
 
+  public handleContextLost(): void {
+    this.loop.stop();
+    this.fallbackScreen.showRecoveryToast();
+    if (this.contextLostTimeoutId !== null) {
+      clearTimeout(this.contextLostTimeoutId);
+    }
+    this.contextLostTimeoutId = setTimeout(() => {
+      this.fallbackScreen.showFallback();
+      this.contextLostTimeoutId = null;
+    }, 5000);
+  }
+
+  public handleContextRestored(): void {
+    if (this.contextLostTimeoutId !== null) {
+      clearTimeout(this.contextLostTimeoutId);
+      this.contextLostTimeoutId = null;
+    }
+    this.fallbackScreen.hideRecoveryToast();
+    this.fallbackScreen.hideFallback();
+    this.loop.start();
+  }
+
   public boot(): void {
     this.loop.start();
     this.store.setState({ phase: 'ready' });
@@ -852,6 +885,11 @@ export class App {
     this.exitScreen.dispose();
     this.easterEggs.dispose();
     this.entryScreen.dispose();
+    if (this.contextLostTimeoutId !== null) {
+      clearTimeout(this.contextLostTimeoutId);
+      this.contextLostTimeoutId = null;
+    }
+    this.fallbackScreen.dispose();
     this.wind.dispose();
     this.rustle.dispose();
     this.crickets.dispose();
