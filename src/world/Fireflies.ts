@@ -28,6 +28,7 @@ export class Fireflies {
   public readonly uPixelRatio = { value: 1.0 };
   public readonly uAmount = { value: 0.0 };
   public readonly uColor = { value: new THREE.Color(0xd9ff7a) };
+  public readonly uReducedMotion = { value: 0.0 };
 
   constructor(options: FirefliesOptions = {}) {
     const rng = mulberry32(options.seed ?? 1337);
@@ -81,6 +82,7 @@ export class Fireflies {
         uPixelRatio: this.uPixelRatio,
         uAmount: this.uAmount,
         uColor: this.uColor,
+        uReducedMotion: this.uReducedMotion,
       },
       transparent: true,
       depthWrite: false,
@@ -100,6 +102,10 @@ export class Fireflies {
 
   public getTierCount(): number {
     return TIER_FIREFLY_COUNTS[this.currentTier];
+  }
+
+  public setReducedMotion(reduced: boolean): void {
+    this.uReducedMotion.value = reduced ? 1.0 : 0.0;
   }
 
   public update(time: number, firefliesAmount: number, pixelRatio: number): void {

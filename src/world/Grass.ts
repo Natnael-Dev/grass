@@ -170,6 +170,10 @@ export class Grass {
     this.uSunDir.value.copy(sunDir);
   }
 
+  public setReducedMotion(reduced: boolean): void {
+    this.uReduced.value = reduced ? 1.0 : 0.0;
+  }
+
   public applyMood(mood: {
     grassBase: THREE.Color;
     grassTip: THREE.Color;

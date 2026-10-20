@@ -105,6 +105,14 @@ export class CameraRig {
 
   public setReducedMotion(reduced: boolean): void {
     this.reducedMotion = reduced;
+    if (reduced) {
+      this.currentParallaxX = 0;
+      this.currentParallaxY = 0;
+      this.parallaxTargetX = 0;
+      this.parallaxTargetY = 0;
+      this.idleWeight = 0;
+      this.idleGustFactor = 1.0;
+    }
   }
 
   public getReducedMotion(): boolean {
@@ -138,9 +146,14 @@ export class CameraRig {
   }
 
   public startEntry(): void {
+    this.computeBasePosition();
+    if (this.reducedMotion) {
+      this.isEntering = false;
+      this.camera.position.copy(this.basePosition);
+      return;
+    }
     this.isEntering = true;
     this.entryElapsed = 0;
-    this.computeBasePosition();
     // Entry pose starts higher and further back: base + (0, 0.9, 3.5)
     this.camera.position.set(
       this.basePosition.x,
@@ -179,11 +192,16 @@ export class CameraRig {
     }
 
     // 2. Parallax spring (critically damped spring with omega = 4)
-    this.currentParallaxX = damp(this.currentParallaxX, this.parallaxTargetX, 4, dt);
-    this.currentParallaxY = damp(this.currentParallaxY, this.parallaxTargetY, 4, dt);
+    if (this.reducedMotion) {
+      this.currentParallaxX = 0;
+      this.currentParallaxY = 0;
+    } else {
+      this.currentParallaxX = damp(this.currentParallaxX, this.parallaxTargetX, 4, dt);
+      this.currentParallaxY = damp(this.currentParallaxY, this.parallaxTargetY, 4, dt);
+    }
 
     // 3. Idle drift & gust
-    if (this.isIdle) {
+    if (this.isIdle && !this.reducedMotion) {
       this.idleElapsed += dt;
       this.idleGustElapsed += dt;
       // Idle weight smoothly ramps in over 1.0s
@@ -224,8 +242,8 @@ export class CameraRig {
       const targetY = standingY + (lyingY - standingY) * this.lyingFactor;
 
       // Parallax slight sway in XZ (+-0.15 m)
-      const swayX = this.currentParallaxX * 0.15;
-      const swayZ = this.currentParallaxY * 0.08;
+      const swayX = this.reducedMotion ? 0 : this.currentParallaxX * 0.15;
+      const swayZ = this.reducedMotion ? 0 : this.currentParallaxY * 0.08;
 
       this.camera.position.x = this.basePosition.x + swayX;
       this.camera.position.y = targetY;
@@ -240,13 +258,17 @@ export class CameraRig {
 
     // 6. Look-at calculation with doubled parallax when lying & idle sinusoidal yaw drift
     // Parallax doubles when fully lying down
-    const parallaxMultiplier = 1.0 + this.lyingFactor;
-    let targetLookAtX = this.baseLookAt.x + this.currentParallaxX * 1.5 * parallaxMultiplier;
+    const parallaxMultiplier = this.reducedMotion ? 0 : 1.0 + this.lyingFactor;
+    let targetLookAtX =
+      this.baseLookAt.x +
+      (this.reducedMotion ? 0 : this.currentParallaxX * 1.5 * parallaxMultiplier);
     const targetLookAtY =
-      this.baseLookAt.y + this.lyingFactor * 2.8 + this.currentParallaxY * 0.8 * parallaxMultiplier;
+      this.baseLookAt.y +
+      this.lyingFactor * 2.8 +
+      (this.reducedMotion ? 0 : this.currentParallaxY * 0.8 * parallaxMultiplier);
 
     // Idle sinusoidal yaw drift: +-1.5 deg (0.026 rad) at 0.04 Hz
-    if (this.idleWeight > 0) {
+    if (this.idleWeight > 0 && !this.reducedMotion) {
       const yawDriftRad =
         Math.sin(this.idleElapsed * 2.0 * Math.PI * 0.04) * (1.5 * (Math.PI / 180.0));
       // Over distance of 32m to look-at z

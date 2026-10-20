@@ -107,6 +107,8 @@ export class App {
   private keyupHandler: ((e: KeyboardEvent) => void) | null = null;
   private blurHandler: (() => void) | null = null;
   private visibilityHandler: (() => void) | null = null;
+  private motionMediaHandler: ((e: MediaQueryListEvent) => void) | null = null;
+  private motionMediaQuery: MediaQueryList | null = null;
 
   constructor(options: AppOptions = {}) {
     this.flags = options.flags ?? parseFlags();
@@ -167,11 +169,14 @@ export class App {
       tier: this.store.getState().quality,
       seed: this.flags.seed,
     });
+    this.grass.setReducedMotion(this.capabilities.reducedMotion);
     this.seeds = new Seeds({ seed: this.flags.seed });
     this.fireflies = new Fireflies({
       seed: this.flags.seed,
       tier: this.store.getState().quality,
     });
+    this.fireflies.setReducedMotion(this.capabilities.reducedMotion);
+    this.moodController.setReducedMotion(this.capabilities.reducedMotion);
 
     this.scene.add(this.sky.mesh);
     this.scene.add(this.ridges.group);
@@ -249,6 +254,7 @@ export class App {
         this.enter(viaKeyboard);
       },
     });
+    this.entryScreen.setReducedMotion(this.capabilities.reducedMotion);
 
     // Audio systems initialization
     this.audioEngine = new AudioEngine({ initialMuted: savedMuted });
@@ -274,6 +280,7 @@ export class App {
     this.brushTrail = new BrushTrail(this.store.getState().quality);
     this.keyboardBrush = new KeyboardBrush();
     this.handCursor = new HandCursor();
+    this.handCursor.setReducedMotion(this.capabilities.reducedMotion);
     this.gestureClassifier = new GestureClassifier();
 
     // Wire GestureClassifier events
@@ -346,8 +353,30 @@ export class App {
       if (state.reducedMotion !== prev.reducedMotion) {
         this.cameraRig.setReducedMotion(state.reducedMotion);
         this.vignette.setReducedMotion(state.reducedMotion);
+        this.grass.setReducedMotion(state.reducedMotion);
+        this.fireflies.setReducedMotion(state.reducedMotion);
+        this.moodController.setReducedMotion(state.reducedMotion);
+        this.hintLine.setReducedMotion(state.reducedMotion);
+        this.handCursor.setReducedMotion(state.reducedMotion);
+        this.entryScreen.setReducedMotion(state.reducedMotion);
       }
     });
+
+    // Live prefers-reduced-motion media query listener
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      this.motionMediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      this.motionMediaHandler = (e: MediaQueryListEvent) => {
+        this.store.setState({ reducedMotion: e.matches });
+      };
+      if (typeof this.motionMediaQuery.addEventListener === 'function') {
+        this.motionMediaQuery.addEventListener('change', this.motionMediaHandler);
+      } else {
+        const legacyQuery = this.motionMediaQuery as unknown as {
+          addListener?: (cb: (e: MediaQueryListEvent) => void) => void;
+        };
+        legacyQuery.addListener?.(this.motionMediaHandler);
+      }
+    }
 
     if (typeof window !== 'undefined') {
       this.keydownHandler = (e: KeyboardEvent) => {
@@ -622,9 +651,10 @@ export class App {
     this.hud.uptime.start();
     this.entryScreen.triggerEnter(viaKeyboard);
     if (viaKeyboard) {
+      const focusDelay = this.store.getState().reducedMotion ? 450 : 950;
       setTimeout(() => {
         this.hud.helpButton.focus();
-      }, 950);
+      }, focusDelay);
     }
   }
 
@@ -794,6 +824,18 @@ export class App {
     if (this.visibilityHandler && typeof document !== 'undefined') {
       document.removeEventListener('visibilitychange', this.visibilityHandler);
       this.visibilityHandler = null;
+    }
+    if (this.motionMediaQuery && this.motionMediaHandler) {
+      if (typeof this.motionMediaQuery.removeEventListener === 'function') {
+        this.motionMediaQuery.removeEventListener('change', this.motionMediaHandler);
+      } else {
+        const legacyQuery = this.motionMediaQuery as unknown as {
+          removeListener?: (cb: (e: MediaQueryListEvent) => void) => void;
+        };
+        legacyQuery.removeListener?.(this.motionMediaHandler);
+      }
+      this.motionMediaHandler = null;
+      this.motionMediaQuery = null;
     }
     if (this.capabilities.isTouch && typeof document !== 'undefined') {
       document.body.classList.remove('is-touch');

@@ -1,6 +1,7 @@
 uniform float uTime;
 uniform float uPixelRatio;
 uniform float uAmount;
+uniform float uReducedMotion;
 
 attribute vec4 aPhase;
 attribute float aSize;
@@ -13,10 +14,11 @@ void main() {
   float t = uTime;
   vec3 pos = position;
 
-  // Smooth Lissajous wander around home position
-  float sx = sin(t * 0.45 * aPhase.w + aPhase.x) * 1.4 + cos(t * 0.18 + aPhase.y) * 0.6;
-  float sy = sin(t * 0.70 * aPhase.w + aPhase.y) * 0.45 + cos(t * 0.32 + aPhase.z) * 0.25;
-  float sz = cos(t * 0.40 * aPhase.w + aPhase.z) * 1.2 + sin(t * 0.22 + aPhase.x) * 0.5;
+  // Smooth Lissajous wander around home position (drift x0.3 under reduced motion)
+  float driftScale = mix(1.0, 0.3, uReducedMotion);
+  float sx = (sin(t * 0.45 * aPhase.w + aPhase.x) * 1.4 + cos(t * 0.18 + aPhase.y) * 0.6) * driftScale;
+  float sy = (sin(t * 0.70 * aPhase.w + aPhase.y) * 0.45 + cos(t * 0.32 + aPhase.z) * 0.25) * driftScale;
+  float sz = (cos(t * 0.40 * aPhase.w + aPhase.z) * 1.2 + sin(t * 0.22 + aPhase.x) * 0.5) * driftScale;
 
   pos += vec3(sx, sy, sz);
 
@@ -28,8 +30,9 @@ void main() {
   gl_PointSize = clamp(aSize * uPixelRatio * (280.0 / dist), 1.0, 36.0);
 
   // Blink: smoothstep(0.55, 1.0, sin(t * f + phase))^2
+  // Under reduced motion: steady glow (vBlink = 1.0, no blinking)
   float wave = sin(t * aBlinkParams.x + aBlinkParams.y);
   float blink = smoothstep(0.55, 1.0, wave);
-  vBlink = blink * blink;
+  vBlink = mix(blink * blink, 1.0, uReducedMotion);
   vAlpha = uAmount;
 }

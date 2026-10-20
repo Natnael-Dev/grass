@@ -106,6 +106,15 @@ export class MoodController {
   private fadeElapsed = 0;
   private currentMood: MoodName;
   private targetMood: MoodName;
+  private reducedMotion = false;
+
+  public setReducedMotion(reduced: boolean): void {
+    this.reducedMotion = reduced;
+  }
+
+  public getFadeDuration(): number {
+    return this.reducedMotion ? 1.0 : MoodController.FADE_DURATION;
+  }
 
   // Preallocated snapshots for retargetable blending
   private readonly startSnap: IntermediateValues;
@@ -271,7 +280,8 @@ export class MoodController {
     }
 
     this.fadeElapsed += dt;
-    const rawT = Math.min(1, this.fadeElapsed / MoodController.FADE_DURATION);
+    const duration = this.getFadeDuration();
+    const rawT = Math.min(1, this.fadeElapsed / duration);
     const t = easeInOut(rawT);
     this.state.progress = rawT;
 

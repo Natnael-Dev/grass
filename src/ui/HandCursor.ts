@@ -26,6 +26,15 @@ export class HandCursor {
   private hasPosition = false;
   private isHolding = false;
   private holdDuration = 0;
+  private reducedMotion = false;
+
+  public setReducedMotion(reduced: boolean): void {
+    this.reducedMotion = reduced;
+    if (reduced) {
+      this.targetRot = 0;
+      this.currentRot = 0;
+    }
+  }
 
   private static readonly SVG_OPEN = `<svg viewBox="0 0 32 32" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M12 28 C9 28 8 25 8 21 L8 14 C8 12.5 9 11.5 10.5 11.5 C12 11.5 12.5 12.5 12.5 14 L12.5 10 C12.5 8.5 13.5 7.5 15 7.5 C16.5 7.5 17 8.5 17 10 L17 9 C17 7.5 18 6.5 19.5 6.5 C21 6.5 21.5 7.5 21.5 9 L21.5 12 C21.5 11 22.5 10 23.8 10 C25.2 10 25.5 11 25.5 12.5 L25.5 20 C25.5 25 22 28 17 28 Z" fill="#fffbf0" stroke="#262f22" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -179,12 +188,18 @@ export class HandCursor {
       this.renderState(nextState);
     }
 
+    if (this.reducedMotion) {
+      this.targetRot = 0;
+      this.currentRot = 0;
+    }
+
     // 4. Rotation damping
     this.currentRot += (this.targetRot - this.currentRot) * 0.25;
 
     // 5. Apply transform centered on pointer
     if (this.element.style) {
-      this.element.style.transform = `translate3d(${this.currentX - 16}px, ${this.currentY - 16}px, 0) rotate(${this.currentRot.toFixed(2)}deg)`;
+      const rot = this.reducedMotion ? 0 : this.currentRot;
+      this.element.style.transform = `translate3d(${this.currentX - 16}px, ${this.currentY - 16}px, 0) rotate(${rot.toFixed(2)}deg)`;
     }
   }
 

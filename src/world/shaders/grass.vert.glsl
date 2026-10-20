@@ -42,7 +42,7 @@ void main() {
   vec2 uv = root.xz * 0.012 + uWindDir * uTime * 0.025;
   float gust = texture2D(uNoise, uv).r;
   float flut = texture2D(uNoise, root.xz * 0.09 + uTime * 0.35).g;
-  float wind = (gust - 0.35) * 1.4 * uWindStrength + flut * 0.18 * uWindStrength * t;
+  float wind = ((gust - 0.35) * 1.4 * uWindStrength + flut * 0.18 * uWindStrength * t) * mix(1.0, 0.35, uReduced);
   local.xz += uWindDir * wind * t * t * h * 0.9;
 
   // 5. Brush trail interaction

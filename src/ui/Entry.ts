@@ -14,6 +14,11 @@ export class Entry {
   private keyHandler: ((e: KeyboardEvent) => void) | null = null;
   private loadingTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private isEntered = false;
+  private reducedMotion = false;
+
+  public setReducedMotion(reduced: boolean): void {
+    this.reducedMotion = reduced;
+  }
 
   constructor(options: EntryOptions = {}) {
     this.onEnter = options.onEnter;
@@ -82,8 +87,9 @@ export class Entry {
     if (this.isEntered) return;
     this.isEntered = true;
 
+    const fadeMs = this.reducedMotion ? 400 : 900;
     if (this.overlay) {
-      this.overlay.style.transition = 'opacity 900ms var(--ease-out)';
+      this.overlay.style.transition = `opacity ${fadeMs}ms var(--ease-out)`;
       this.overlay.style.opacity = '0';
       this.overlay.style.pointerEvents = 'none';
 
@@ -92,7 +98,7 @@ export class Entry {
           this.overlay.style.display = 'none';
           this.overlay.classList.add('hidden');
         }
-      }, 900);
+      }, fadeMs);
     }
 
     this.onEnter?.({ viaKeyboard });
