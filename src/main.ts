@@ -16,7 +16,7 @@ export interface GrassDebugApi {
     triangles: number;
     blades: number;
   };
-  setTier: (tier: QualityTier) => void;
+  setTier: (tier: QualityTier, lock?: boolean) => void;
   setMood: (m: MoodName) => void;
   setLying: (lying: boolean) => void;
   setIdle: (idle: boolean) => void;
@@ -57,8 +57,8 @@ function boot(): void {
         app,
         getState: () => app.store.getState(),
         stats: () => app.getStats(),
-        setTier: (t: QualityTier) => {
-          app.setQuality(t);
+        setTier: (t: QualityTier, lock = true) => {
+          app.setQuality(t, lock);
         },
         setMood: (m: MoodName) => {
           app.setMood(m);
