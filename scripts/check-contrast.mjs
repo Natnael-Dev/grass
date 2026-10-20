@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /**
  * check-contrast.mjs — WCAG 2.1 AA Contrast Ratio Verification
  *
