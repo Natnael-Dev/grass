@@ -2,17 +2,19 @@ import { createPinkNoiseBuffer } from './noise';
 import { calculateRustleParams } from './math';
 
 export class Rustle {
-  private ctx: AudioContext;
-  private destination: AudioNode;
+  private ctx: AudioContext | null;
+  private destination: AudioNode | null;
 
   private noiseBuffer: AudioBuffer | null = null;
   private accumulatedProbability = 0;
   private lastGrainTime = 0;
 
-  constructor(ctx: AudioContext, destination: AudioNode) {
+  constructor(ctx: AudioContext | null, destination: AudioNode | null) {
     this.ctx = ctx;
     this.destination = destination;
-    this.noiseBuffer = createPinkNoiseBuffer(this.ctx, 1.0);
+    if (this.ctx) {
+      this.noiseBuffer = createPinkNoiseBuffer(this.ctx, 1.0);
+    }
   }
 
   /**
@@ -20,6 +22,7 @@ export class Rustle {
    * Spawns grains according to brush speed and strength, capped at 12 grains/second.
    */
   public onBrush(speedPxPerSec: number, strength: number, dtSeconds: number): void {
+    if (!this.ctx || !this.destination) return;
     const { grainProbability, grainGain } = calculateRustleParams(
       speedPxPerSec,
       strength,
@@ -43,7 +46,7 @@ export class Rustle {
   }
 
   private spawnGrain(strengthGain: number): void {
-    if (!this.noiseBuffer) return;
+    if (!this.ctx || !this.destination || !this.noiseBuffer) return;
 
     const now = this.ctx.currentTime;
     // Grain duration between 60 ms and 140 ms
@@ -93,5 +96,7 @@ export class Rustle {
 
   public dispose(): void {
     this.noiseBuffer = null;
+    this.ctx = null;
+    this.destination = null;
   }
 }

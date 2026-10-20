@@ -1,44 +1,45 @@
 export class Birds {
-  private ctx: AudioContext;
-  private destination: AudioNode;
+  private ctx: AudioContext | null;
+  private destination: AudioNode | null;
   private started = false;
 
   private moodGain = 0;
   private nextChirpTime = 0;
   private timerId: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(ctx: AudioContext, destination: AudioNode) {
+  constructor(ctx: AudioContext | null, destination: AudioNode | null) {
     this.ctx = ctx;
     this.destination = destination;
   }
 
   public start(): void {
-    if (this.started) return;
+    if (this.started || !this.ctx || !this.destination) return;
     this.started = true;
     this.scheduleNextChirp();
   }
 
   public update(audioBirds: number, _dtSeconds?: number): void {
     this.moodGain = audioBirds;
-    if (this.moodGain <= 0.001) {
+    if (this.moodGain <= 0.001 || !this.ctx || !this.started) {
       return;
     }
 
     const now = this.ctx.currentTime;
-    if (now >= this.nextChirpTime && this.started) {
+    if (now >= this.nextChirpTime) {
       this.playChirpSequence();
       this.scheduleNextChirp();
     }
   }
 
   private scheduleNextChirp(): void {
+    if (!this.ctx) return;
     // Chirp every 2 to 7 seconds (randomized)
     const interval = 2.0 + Math.random() * 5.0;
     this.nextChirpTime = this.ctx.currentTime + interval;
   }
 
   private playChirpSequence(): void {
-    if (this.moodGain <= 0.001) return;
+    if (!this.ctx || !this.destination || this.moodGain <= 0.001) return;
 
     // 1 to 3 syllables in a sequence
     const syllableCount = 1 + Math.floor(Math.random() * 3);
@@ -52,6 +53,8 @@ export class Birds {
   }
 
   private playSyllable(startTime: number, pan: number): void {
+    if (!this.ctx || !this.destination) return;
+
     // 70 - 120 ms duration
     const duration = 0.07 + Math.random() * 0.05;
 
@@ -121,5 +124,7 @@ export class Birds {
       this.timerId = null;
     }
     this.started = false;
+    this.ctx = null;
+    this.destination = null;
   }
 }

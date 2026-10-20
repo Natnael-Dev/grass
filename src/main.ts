@@ -5,6 +5,7 @@ import type { AppState } from './app/store';
 
 export interface GrassDebugApi {
   app: App;
+  audioEngine: import('./audio/AudioEngine').AudioEngine;
   getState: () => Readonly<AppState>;
   stats: () => {
     fps: number;
@@ -21,6 +22,9 @@ export interface GrassDebugApi {
   freeze: (on: boolean) => void;
   step: (dt: number) => void;
   enter: (viaKeyboard?: boolean) => void;
+  setMuted: (muted: boolean) => void;
+  toggleMute: () => void;
+  isMuted: () => boolean;
   spawnSeeds: (x?: number, z?: number) => void;
   getSeedsCount: () => number;
   getFirefliesCount: () => number;
@@ -75,6 +79,14 @@ function boot(): void {
         enter: (viaKeyboard = false) => {
           app.enter(viaKeyboard);
         },
+        audioEngine: app.audioEngine,
+        setMuted: (muted: boolean) => {
+          app.setMuted(muted);
+        },
+        toggleMute: () => {
+          app.toggleMute();
+        },
+        isMuted: () => app.store.getState().muted,
         spawnSeeds: (x?: number, z?: number) => {
           app.spawnSeeds(x, z);
         },

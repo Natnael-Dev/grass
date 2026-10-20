@@ -1,6 +1,6 @@
 export class Crickets {
-  private ctx: AudioContext;
-  private destination: AudioNode;
+  private ctx: AudioContext | null;
+  private destination: AudioNode | null;
   private started = false;
 
   // Voices
@@ -20,13 +20,13 @@ export class Crickets {
   // Chirp rhythm scheduler
   private nextChirpTime = 0;
 
-  constructor(ctx: AudioContext, destination: AudioNode) {
+  constructor(ctx: AudioContext | null, destination: AudioNode | null) {
     this.ctx = ctx;
     this.destination = destination;
   }
 
   public start(): void {
-    if (this.started) return;
+    if (this.started || !this.ctx || !this.destination) return;
 
     const now = this.ctx.currentTime;
 
@@ -80,7 +80,7 @@ export class Crickets {
   }
 
   public update(audioCrickets: number): void {
-    if (!this.started || !this.outputGain) return;
+    if (!this.started || !this.outputGain || !this.ctx) return;
 
     // Very low gain 0.02 - 0.035 scaled by mood
     this.targetGain = audioCrickets * 0.03;
@@ -138,5 +138,7 @@ export class Crickets {
       this.outputGain = null;
     }
     this.started = false;
+    this.ctx = null;
+    this.destination = null;
   }
 }

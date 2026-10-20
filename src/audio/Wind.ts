@@ -2,8 +2,8 @@ import { createPinkNoiseBuffer } from './noise';
 import { calculateWindGain } from './math';
 
 export class Wind {
-  private ctx: AudioContext;
-  private destination: AudioNode;
+  private ctx: AudioContext | null;
+  private destination: AudioNode | null;
   private started = false;
 
   private noiseBuffer: AudioBuffer | null = null;
@@ -20,13 +20,13 @@ export class Wind {
   private outputGain: GainNode | null = null;
   private targetGain = 0;
 
-  constructor(ctx: AudioContext, destination: AudioNode) {
+  constructor(ctx: AudioContext | null, destination: AudioNode | null) {
     this.ctx = ctx;
     this.destination = destination;
   }
 
   public start(): void {
-    if (this.started) return;
+    if (this.started || !this.ctx || !this.destination) return;
 
     this.noiseBuffer = createPinkNoiseBuffer(this.ctx, 4.0);
 
@@ -84,7 +84,7 @@ export class Wind {
   }
 
   public update(audioWind: number, windStrength: number, isLyingDown = false): void {
-    if (!this.started || !this.outputGain) return;
+    if (!this.started || !this.outputGain || !this.ctx) return;
 
     const baseGain = calculateWindGain(audioWind, windStrength);
     const lieMultiplier = isLyingDown ? 1.25 : 1.0;
@@ -126,5 +126,7 @@ export class Wind {
       this.outputGain = null;
     }
     this.started = false;
+    this.ctx = null;
+    this.destination = null;
   }
 }
