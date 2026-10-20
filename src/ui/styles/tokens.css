@@ -118,6 +118,12 @@ body.is-touch .btn-enter,
   min-width: 44px;
 }
 
+/* Hide hand cursor on touch devices */
+body.is-touch .hand-cursor,
+.is-touch .hand-cursor {
+  display: none !important;
+}
+
 @media (pointer: coarse) {
   .glass-btn {
     min-height: 44px;
@@ -127,6 +133,9 @@ body.is-touch .btn-enter,
   .btn-enter {
     min-height: 44px;
     min-width: 44px;
+  }
+  .hand-cursor {
+    display: none !important;
   }
 }
 

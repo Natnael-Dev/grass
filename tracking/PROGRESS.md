@@ -1,8 +1,8 @@
 # PROGRESS — the agent's live log (update after EVERY task and gate)
 
 **Current milestone:** M10 (Mobile/a11y/fallbacks — G9)
-**Current state:** planning
-**Last updated:** 2026-10-20 20:41
+**Current state:** review (awaiting Gate G9 approval)
+**Last updated:** 2026-10-20 22:20
 **Open blockers:** none
 
 ## Milestone checklist
@@ -70,7 +70,12 @@ Format: `YYYY-MM-DD HH:MM | Mx | task | result | commit-sha | evidence-path`
 2026-10-20 20:15 | M9 | Task 9.2 audio engine core graph with master bus, mute ramp and lifecycle | pass | 8443d9c | tracking/evidence/M9/README.md
 2026-10-20 20:18 | M9 | Task 9.3 procedural wind, rustle, crickets and birds layers | pass | 6590aa1 | tracking/evidence/M9/README.md
 2026-10-20 20:31 | M9 | Task 9.4 integrate audio engine with app loop, moods, gestures, and sfx | pass | 4574655 | tracking/evidence/M9/README.md
-2026-10-20 20:38 | M9 | Task 9.5 automated E2E test suite and Gate G8 evidence | pass | HEAD | tracking/evidence/M9/README.md
+2026-10-20 20:38 | M9 | Task 9.5 automated E2E test suite and Gate G8 evidence | pass | 04953c8 | tracking/evidence/M9/README.md
+2026-10-20 21:05 | M10 | Task 10.1 HTML landmarks, viewport safe areas, responsive CSS, and forced-colors | pass | 31d2dba | tracking/evidence/M10/README.md
+2026-10-20 21:12 | M10 | Task 10.2 Dynamic reduced-motion synchronization across engine and shaders | pass | 3db38a0 | tracking/evidence/M10/README.md
+2026-10-20 21:18 | M10 | Task 10.3 WebGL context-lost recovery and fallback handling | pass | 8c93dd9 | tracking/evidence/M10/README.md
+2026-10-20 21:24 | M10 | Task 10.4 WCAG AA color contrast verification script and tests | pass | 61ddb5c | tracking/evidence/M10/README.md
+2026-10-20 22:15 | M10 | Task 10.5 Automated mobile & a11y E2E test suite and Gate G9 evidence | pass | HEAD | tracking/evidence/M10/README.md
 
 ## Attempt log (for failing checks; max 3 per check)
 
@@ -83,6 +88,7 @@ M5 | Loop.ts freeze | 1 | Loop.ts was advancing time with dt=fixedDt on rAF when
 M6 | Playwright E2E | 1 | Entry overlay obscured lie-down screenshots and SwiftShader 2-screenshot capture timed out at 30s | Added display:none to .entry-overlay.hidden and set test.setTimeout(120000) | pass
 M7 | Playwright E2E | 1 | Loop.step clamped dt to 0.1s so 8x0.5s calls advanced only 0.8s rather than 4.0s | Used loop of step(0.1) totaling 7.0s | pass
 M8 | Playwright E2E | 1 | Headless Chromium timer clamping in background tabs delayed char typing | Used elapsed time calculation in HintLine and skipTyping() | pass
+M10 | Playwright E2E | 1 | WebGL context accumulation across sequential tests in single browser context degraded SwiftShader performance | Isolated tests using browser.newContext() per test and robust entry trigger fallback | pass
 
 ## Agent-proposed decisions (see ADR file)
 
