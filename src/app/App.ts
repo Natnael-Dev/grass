@@ -133,6 +133,10 @@ export class App {
       hintsSeen,
     });
 
+    if (this.capabilities.isTouch && typeof document !== 'undefined') {
+      document.body.classList.add('is-touch');
+    }
+
     if (options.canvas) {
       this.canvas = options.canvas;
     } else {
@@ -790,6 +794,9 @@ export class App {
     if (this.visibilityHandler && typeof document !== 'undefined') {
       document.removeEventListener('visibilitychange', this.visibilityHandler);
       this.visibilityHandler = null;
+    }
+    if (this.capabilities.isTouch && typeof document !== 'undefined') {
+      document.body.classList.remove('is-touch');
     }
     this.pointer.dispose();
     this.keyboardBrush.dispose();

@@ -2,10 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>grass — a tiny meadow for a one-minute break</title>
     <meta
       name="description"
@@ -33,6 +30,7 @@
       body {
         width: 100%;
         height: 100%;
+        min-height: 100dvh;
         overflow: hidden;
         background-color: #0c142b;
         color: var(--text);
@@ -43,6 +41,7 @@
         position: relative;
         width: 100%;
         height: 100%;
+        min-height: 100dvh;
       }
       #scene {
         position: absolute;
@@ -51,6 +50,8 @@
         width: 100%;
         height: 100%;
         display: block;
+        touch-action: none;
+        overscroll-behavior: none;
       }
       .vignette-overlay {
         position: absolute;
@@ -177,7 +178,7 @@
     </style>
   </head>
   <body>
-    <div id="app">
+    <main id="app">
       <canvas id="scene" aria-hidden="true"></canvas>
       <div id="entry-overlay" class="entry-overlay">
         <div class="entry-content">
@@ -187,7 +188,7 @@
           <p class="entry-note">sound starts when you click.</p>
         </div>
       </div>
-    </div>
+    </main>
     <noscript>
       <div class="noscript-banner">grass needs javascript. the real grass doesn't, though.</div>
     </noscript>

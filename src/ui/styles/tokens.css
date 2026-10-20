@@ -104,43 +104,123 @@
   color: var(--accent);
 }
 
-/* Touch enhancements */
-body.is-touch .glass-btn {
-  min-height: 44px;
-  min-width: 44px;
-  padding: 0 16px;
-}
-
+/* Touch enhancements & minimum 44px touch targets */
+body.is-touch .glass-btn,
+.is-touch .glass-btn,
+body.is-touch .btn-enter,
+.is-touch .btn-enter,
 @media (pointer: coarse) {
   .glass-btn {
     min-height: 44px;
     min-width: 44px;
     padding: 0 16px;
   }
+  .btn-enter {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Hint line 2-line clamp and wrapping */
+.hint-line {
+  max-width: min(90vw, 560px);
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+}
+
+/* Portrait / Narrow viewport (< 640px) */
+@media (max-width: 639px) {
+  .hud-uptime-container {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    bottom: calc(max(16px, var(--safe-bottom)) + 54px) !important;
+  }
+  .hint-line {
+    max-width: 90vw !important;
+  }
+  .glass-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .mood-btn {
+    padding: 0 12px;
+  }
+}
+
+/* Small height landscape (< 420px, e.g. landscape phone) */
+@media (max-height: 419px) {
+  .hud-uptime-container {
+    display: none !important;
+  }
+  .mood-btn span {
+    display: none !important;
+  }
+  .mood-btn {
+    padding: 0 10px !important;
+    min-height: 40px;
+    min-width: 40px;
+  }
 }
 
 /* High contrast / forced colors */
 @media (forced-colors: active) {
   .glass-panel,
-  .glass-btn {
-    background: Canvas;
-    color: CanvasText;
-    border: 2px solid ButtonBorder;
+  .glass-btn,
+  .entry-content,
+  .help-dialog,
+  .exit-container,
+  .hint-line,
+  .recovery-toast,
+  .fallback-overlay {
+    background: Canvas !important;
+    color: CanvasText !important;
+    border: 2px solid ButtonBorder !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
-  .glass-btn:focus-visible {
-    outline: 3px solid Highlight;
+  .glass-btn:focus-visible,
+  .btn-enter:focus-visible,
+  .btn-close:focus-visible,
+  .btn-rerun:focus-visible,
+  .btn-reload:focus-visible {
+    outline: 3px solid Highlight !important;
+    outline-offset: 2px !important;
   }
   .glass-btn[aria-pressed='true'] {
-    border-color: Highlight;
-    background: Highlight;
-    color: HighlightText;
+    border-color: Highlight !important;
+    background: Highlight !important;
+    color: HighlightText !important;
+  }
+  .btn-enter,
+  .btn-close,
+  .btn-rerun,
+  .btn-reload {
+    background: ButtonFace !important;
+    color: ButtonText !important;
+    border: 2px solid ButtonBorder !important;
+  }
+  .cursor-blink,
+  .hud-wordmark {
+    color: CanvasText !important;
   }
 }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .glass-btn,
-  .glass-panel {
+  .glass-panel,
+  .entry-overlay,
+  .help-backdrop,
+  .help-dialog,
+  .exit-screen,
+  .cursor-blink {
     transition: none !important;
     animation: none !important;
   }
