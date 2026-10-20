@@ -20,7 +20,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "size": "node scripts/check-size.mjs",
-    "check": "npm run lint && npm run typecheck && npm run test && npm run build && npm run size",
+    "contrast": "node scripts/check-contrast.mjs",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run build && npm run size && npm run contrast",
     "prepare": "husky"
   },
   "dependencies": {
