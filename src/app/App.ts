@@ -31,6 +31,7 @@ import { safeStorage } from '../core/storage';
 import { parseFlags, type AppFlags, type QualityTier, type MoodName } from './flags';
 import { detectCapabilities, type Capabilities } from './capabilities';
 import { Store } from './store';
+import { AdaptiveQuality } from '../core/AdaptiveQuality';
 import { StatsOverlay } from '../debug/StatsOverlay';
 import { AudioEngine } from '../audio/AudioEngine';
 import { Wind } from '../audio/Wind';
@@ -45,6 +46,13 @@ export interface AppOptions {
 }
 
 export class App {
+  public static readonly TIER_DPR_CAPS: Record<QualityTier, number> = {
+    high: 2.0,
+    medium: 1.5,
+    low: 1.25,
+  };
+
+  public readonly adaptiveQuality: AdaptiveQuality;
   public readonly canvas: HTMLCanvasElement;
   public readonly flags: AppFlags;
   public readonly capabilities: Capabilities;
@@ -156,7 +164,7 @@ export class App {
 
     this.renderer = new Renderer({
       canvas: this.canvas,
-      dprCap: this.capabilities.dprCap,
+      dprCap: App.TIER_DPR_CAPS[this.capabilities.tier],
       antialias: true,
       onContextLost: () => {
         this.handleContextLost();
@@ -167,6 +175,14 @@ export class App {
     });
 
     const initialAspect = (this.canvas.clientWidth || 800) / (this.canvas.clientHeight || 600);
+    this.adaptiveQuality = new AdaptiveQuality({
+      initialTier: this.capabilities.tier,
+      manualOverride: this.flags.quality !== null,
+      onTierChange: (newTier, _prevTier, reason) => {
+        this.applyTierChange(newTier, reason);
+      },
+    });
+
     this.cameraRig = new CameraRig({ aspect: initialAspect });
     this.cameraRig.setReducedMotion(this.capabilities.reducedMotion);
 
@@ -357,6 +373,7 @@ export class App {
         this.grass.setTier(state.quality);
         this.brushTrail.setTier(state.quality);
         this.fireflies.setTier(state.quality);
+        this.renderer.setDprCap(App.TIER_DPR_CAPS[state.quality]);
       }
       if (state.targetMood !== prev.targetMood) {
         this.moodController.setMood(state.targetMood);
@@ -479,6 +496,7 @@ export class App {
 
     this.loop.subscribe((dt, elapsed) => {
       this.currentFps = dt > 0 ? 1 / dt : 60;
+      this.adaptiveQuality.recordFrame(dt);
 
       this.moodController.update(dt);
       if (this.moodController.state.isFading) {
@@ -691,11 +709,20 @@ export class App {
     }
   }
 
-  public setQuality(tier: QualityTier): void {
+  public setQuality(tier: QualityTier, lock = true): void {
+    this.adaptiveQuality.setTier(tier, lock);
+    this.applyTierChange(tier, lock ? 'Manual override' : 'API update');
+  }
+
+  private applyTierChange(tier: QualityTier, reason?: string): void {
+    if (this.flags.debug && reason) {
+      console.info(`[AdaptiveQuality] Switched tier to ${tier}: ${reason}`);
+    }
     this.store.setState({ quality: tier });
     this.grass.setTier(tier);
     this.brushTrail.setTier(tier);
     this.fireflies.setTier(tier);
+    this.renderer.setDprCap(App.TIER_DPR_CAPS[tier]);
   }
 
   public setMood(mood: MoodName, immediate = false): void {

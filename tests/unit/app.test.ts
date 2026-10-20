@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { parseFlags } from '../../src/app/flags';
 import { detectCapabilities } from '../../src/app/capabilities';
 import { Store } from '../../src/app/store';
+import { App } from '../../src/app/App';
 
 describe('flags', () => {
   it('parses empty query string to defaults', () => {
@@ -60,5 +61,13 @@ describe('store', () => {
     unsub();
     store.setState({ mood: 'dawn' });
     expect(listener).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('App Adaptive Quality & Tier Budgets', () => {
+  it('exposes TIER_DPR_CAPS matching design-system specification', () => {
+    expect(App.TIER_DPR_CAPS.high).toBe(2.0);
+    expect(App.TIER_DPR_CAPS.medium).toBe(1.5);
+    expect(App.TIER_DPR_CAPS.low).toBe(1.25);
   });
 });

@@ -6,6 +6,8 @@ import type { AppState } from './app/store';
 export interface GrassDebugApi {
   app: App;
   audioEngine: import('./audio/AudioEngine').AudioEngine;
+  adaptiveQuality: import('./core/AdaptiveQuality').AdaptiveQuality;
+  getMetrics: () => import('./core/AdaptiveQuality').FrameMetrics;
   getState: () => Readonly<AppState>;
   stats: () => {
     fps: number;
@@ -80,6 +82,8 @@ function boot(): void {
           app.enter(viaKeyboard);
         },
         audioEngine: app.audioEngine,
+        adaptiveQuality: app.adaptiveQuality,
+        getMetrics: () => app.adaptiveQuality.getMetrics(),
         setMuted: (muted: boolean) => {
           app.setMuted(muted);
         },

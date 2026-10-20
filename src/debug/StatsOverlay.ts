@@ -4,6 +4,7 @@ export interface StatsData {
   drawCalls: number;
   triangles: number;
   blades: number;
+  p95?: number;
 }
 
 export class StatsOverlay {
@@ -48,6 +49,7 @@ export class StatsOverlay {
       data.triangles > 1000 ? `${(data.triangles / 1000).toFixed(1)}k` : `${data.triangles}`;
     const formattedBlades =
       data.blades > 1000 ? `${(data.blades / 1000).toFixed(0)}k` : `${data.blades}`;
+    const p95Line = data.p95 !== undefined ? `\np95:      ${data.p95.toFixed(1)}ms` : '';
 
     this.element.textContent =
       `grass_ debug\n` +
@@ -55,7 +57,8 @@ export class StatsOverlay {
       `tier:     ${data.tier}\n` +
       `calls:    ${data.drawCalls}\n` +
       `tris:     ${formattedTriangles}\n` +
-      `blades:   ${formattedBlades}`;
+      `blades:   ${formattedBlades}` +
+      p95Line;
   }
 
   public setVisible(visible: boolean): void {
