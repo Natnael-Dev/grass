@@ -1,8 +1,8 @@
 # PROGRESS — the agent's live log (update after EVERY task and gate)
 
-**Current milestone:** M9 (Audio — G8)
+**Current milestone:** M10 (Mobile/a11y/fallbacks — G9)
 **Current state:** planning
-**Last updated:** 2026-10-19 23:56
+**Last updated:** 2026-10-20 20:41
 **Open blockers:** none
 
 ## Milestone checklist
@@ -18,7 +18,7 @@ Mark `[x]` only when the gate passed AND evidence exists AND (strict mode) the h
 - [x] M6 Lie-down + parallax + idle (G5) — evidence: tracking/evidence/M6/
 - [x] M7 Seeds + fireflies (G6) — evidence: tracking/evidence/M7/
 - [x] M8 UI shell + hints + easter eggs (G7) — evidence: tracking/evidence/M8/
-- [ ] M9 Audio (G8)
+- [x] M9 Audio (G8) — evidence: tracking/evidence/M9/
 - [ ] M10 Mobile/a11y/fallbacks (G9)
 - [ ] M11 Performance + adaptive quality (G10)
 - [ ] M12 Hardening + QA audit (G11)
@@ -66,6 +66,11 @@ Format: `YYYY-MM-DD HH:MM | Mx | task | result | commit-sha | evidence-path`
 2026-10-19 22:15 | M7 | Task 7.3 seeds spawn and fireflies integrated into world and input loop | pass | 375138f | tracking/evidence/M7/README.md
 2026-10-19 22:28 | M7 | Task 7.4 Playwright E2E tests for seeds and fireflies | pass | 3eb9e59 | tracking/evidence/M7/README.md
 2026-10-19 23:45 | M8 | UI shell, hints, help, uptime, easter eggs, 404, e2e J1/J2/J4 suite | pass | HEAD | tracking/evidence/M8/README.md
+2026-10-20 20:10 | M9 | Task 9.1 procedural noise generator and audio math utilities | pass | bd82923 | tracking/evidence/M9/README.md
+2026-10-20 20:15 | M9 | Task 9.2 audio engine core graph with master bus, mute ramp and lifecycle | pass | 8443d9c | tracking/evidence/M9/README.md
+2026-10-20 20:18 | M9 | Task 9.3 procedural wind, rustle, crickets and birds layers | pass | 6590aa1 | tracking/evidence/M9/README.md
+2026-10-20 20:31 | M9 | Task 9.4 integrate audio engine with app loop, moods, gestures, and sfx | pass | 4574655 | tracking/evidence/M9/README.md
+2026-10-20 20:38 | M9 | Task 9.5 automated E2E test suite and Gate G8 evidence | pass | HEAD | tracking/evidence/M9/README.md
 
 ## Attempt log (for failing checks; max 3 per check)
 

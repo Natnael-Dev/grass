@@ -31,6 +31,12 @@ import { parseFlags, type AppFlags, type QualityTier, type MoodName } from './fl
 import { detectCapabilities, type Capabilities } from './capabilities';
 import { Store } from './store';
 import { StatsOverlay } from '../debug/StatsOverlay';
+import { AudioEngine } from '../audio/AudioEngine';
+import { Wind } from '../audio/Wind';
+import { Rustle } from '../audio/Rustle';
+import { Crickets } from '../audio/Crickets';
+import { Birds } from '../audio/Birds';
+import { Sfx } from '../audio/Sfx';
 
 export interface AppOptions {
   canvas?: HTMLCanvasElement;
@@ -74,6 +80,14 @@ export class App {
   public readonly exitScreen: ExitScreen;
   public readonly easterEggs: EasterEggs;
   public readonly entryScreen: Entry;
+
+  // Audio systems
+  public readonly audioEngine: AudioEngine;
+  public readonly wind: Wind;
+  public readonly rustle: Rustle;
+  public readonly crickets: Crickets;
+  public readonly birds: Birds;
+  public readonly sfx: Sfx;
 
   // Idle tracking
   private idleInactivityTimer = 0;
@@ -232,6 +246,21 @@ export class App {
       },
     });
 
+    // Audio systems initialization
+    this.audioEngine = new AudioEngine({ initialMuted: savedMuted });
+    const audioCtx = this.audioEngine.getContext();
+    const ambienceBus = this.audioEngine.getAmbienceBus();
+    const sfxBus = this.audioEngine.getSfxBus();
+    this.wind = new Wind(audioCtx, ambienceBus);
+    this.rustle = new Rustle(audioCtx, ambienceBus);
+    this.crickets = new Crickets(audioCtx, ambienceBus);
+    this.birds = new Birds(audioCtx, ambienceBus);
+    this.sfx = new Sfx(audioCtx, sfxBus);
+
+    if (!this.audioEngine.isSupported()) {
+      this.hud.soundToggle.element.style.display = 'none';
+    }
+
     // Initial mood setup across all world systems
     this.applyCurrentMood();
 
@@ -264,6 +293,9 @@ export class App {
 
     // Wire Pointer events into GestureClassifier, HUD activity and idle tracker
     this.pointer.onDown = (x, y) => {
+      if (!this.audioEngine.isUnlocked()) {
+        void this.audioEngine.unlock();
+      }
       this.resetIdle();
       this.gestureClassifier.onPointerDown(x, y);
       this.hud.onPointerSceneActivity();
@@ -386,8 +418,10 @@ export class App {
         if (typeof document !== 'undefined' && document.hidden) {
           this.gestureClassifier.reset();
           this.hud.uptime.pause();
+          this.audioEngine.handleVisibilityChange(true);
         } else if (typeof document !== 'undefined' && !document.hidden) {
           this.hud.uptime.resume();
+          this.audioEngine.handleVisibilityChange(false);
         }
       };
 
@@ -448,10 +482,20 @@ export class App {
         this.renderer.gl.getPixelRatio(),
       );
 
+      // Procedural audio ambient layers update
+      this.wind.update(
+        this.moodController.state.audio.wind,
+        effectiveWindStrength,
+        this.audioEngine.isLyingDown(),
+      );
+      this.crickets.update(this.moodController.state.audio.crickets);
+      this.birds.update(this.moodController.state.audio.birds, dt);
+
       // 4. Process Virtual Keyboard Brush or Pointer
       this.keyboardBrush.update(dt);
       let groundHit: THREE.Vector3 | null = null;
       let groundSpeed = 0;
+      let rustleSpeed = 0;
       let hasVirtualScreenPos = false;
 
       if (this.keyboardBrush.isActive) {
@@ -461,6 +505,7 @@ export class App {
         this.scratchGroundHit.set(kx, terrainHeight(kx, kz), kz);
         groundHit = this.scratchGroundHit;
         groundSpeed = this.keyboardBrush.speed;
+        rustleSpeed = this.keyboardBrush.speed > 0 ? 450 : 0;
 
         this.scratchProjected.copy(groundHit).project(this.cameraRig.camera);
         const canvasWidth = this.canvas.clientWidth || 800;
@@ -474,6 +519,7 @@ export class App {
           const distPx = Math.hypot(this.pointer.state.deltaX, this.pointer.state.deltaY);
           if (distPx > 0) {
             this.hintSequencer.onBrush(distPx);
+            rustleSpeed = dt > 0 ? distPx / dt : 0;
           }
         }
 
@@ -503,6 +549,8 @@ export class App {
 
         groundSpeed = this.pointer.getSmoothedGroundSpeed();
       }
+
+      this.rustle.onBrush(rustleSpeed, 1.0, dt);
 
       // 5. Brush Interaction: push into trail if hit ground and not in lie-down mode
       if (groundHit && !this.cameraRig.getIsLying()) {
@@ -559,6 +607,11 @@ export class App {
   }
 
   public enter(viaKeyboard = false): void {
+    void this.audioEngine.unlock().then(() => {
+      this.wind.start();
+      this.crickets.start();
+      this.birds.start();
+    });
     this.cameraRig.startEntry();
     this.store.setState({ phase: 'running' });
     this.hintSequencer.start();
@@ -591,6 +644,7 @@ export class App {
 
   public setMuted(muted: boolean): void {
     this.store.setState({ muted });
+    this.audioEngine.setMuted(muted);
     this.hud.soundToggle.setMuted(muted);
     safeStorage.setSavedMuted(muted);
   }
@@ -632,6 +686,7 @@ export class App {
 
     if (groundHit) {
       this.seeds.spawn(groundHit.x, groundHit.y, groundHit.z, this.store.getState().quality);
+      this.sfx.playSeedScatter();
 
       // Tap brush impulse: radius x1.3, strength 1.0
       const distFromCam = groundHit.distanceTo(this.cameraRig.camera.position);
@@ -645,6 +700,7 @@ export class App {
     const spawnZ = z ?? 0;
     const spawnY = terrainHeight(spawnX, spawnZ);
     this.seeds.spawn(spawnX, spawnY, spawnZ, this.store.getState().quality);
+    this.sfx.playSeedScatter();
     const distFromCam = Math.hypot(
       spawnX - this.cameraRig.camera.position.x,
       spawnZ - this.cameraRig.camera.position.z,
@@ -666,6 +722,7 @@ export class App {
     this.cameraRig.setLying(lying);
     this.vignette.setLying(lying);
     this.handCursor.setHolding(lying);
+    this.audioEngine.setLyingDown(lying);
     if (typeof document !== 'undefined') {
       if (lying) {
         document.body.classList.add('lying');
@@ -746,6 +803,12 @@ export class App {
     this.exitScreen.dispose();
     this.easterEggs.dispose();
     this.entryScreen.dispose();
+    this.wind.dispose();
+    this.rustle.dispose();
+    this.crickets.dispose();
+    this.birds.dispose();
+    this.sfx.dispose();
+    this.audioEngine.dispose();
     this.loop.dispose();
     this.sky.dispose();
     this.ridges.dispose();
