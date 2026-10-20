@@ -857,14 +857,17 @@ export class App {
     drawCalls: number;
     triangles: number;
     blades: number;
+    p95: number;
   } {
     const info = this.renderer.getDrawCallInfo();
+    const metrics = this.adaptiveQuality.getMetrics();
     return {
       fps: this.currentFps,
       tier: this.store.getState().quality,
       drawCalls: info.drawCalls,
       triangles: info.triangles,
       blades: this.grass.instanceCount,
+      p95: metrics.p95FrameTimeMs,
     };
   }
 
