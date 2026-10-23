@@ -80,9 +80,23 @@ export class CameraRig {
     this.parallaxTargetY = Math.max(-1, Math.min(1, y));
   }
 
-  public setLying(lying: boolean): void {
-    if (this.isLying === lying) return;
+  public setLying(lying: boolean, immediate = false): void {
+    if (this.isLying === lying && !immediate) return;
     this.isLying = lying;
+    if (immediate) {
+      this.lyingFactor = lying ? 1.0 : 0.0;
+      this.lyingTransitionActive = false;
+      this.isEntering = false;
+      this.computeBasePosition();
+      const groundAtCam = terrainHeight(this.basePosition.x, this.basePosition.z);
+      const standingY = groundAtCam + 1.65;
+      const lyingY = groundAtCam + 0.38;
+      this.camera.position.x = this.basePosition.x;
+      this.camera.position.y = standingY + (lyingY - standingY) * this.lyingFactor;
+      this.camera.position.z = this.basePosition.z;
+      this.camera.lookAt(this.currentLookAt);
+      return;
+    }
     this.lyingTransitionActive = true;
     this.lyingTransitionElapsed = 0;
     this.lyingTransitionStartFactor = this.lyingFactor;

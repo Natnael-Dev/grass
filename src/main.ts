@@ -18,7 +18,7 @@ export interface GrassDebugApi {
   };
   setTier: (tier: QualityTier, lock?: boolean) => void;
   setMood: (m: MoodName) => void;
-  setLying: (lying: boolean) => void;
+  setLying: (lying: boolean, immediate?: boolean) => void;
   setIdle: (idle: boolean) => void;
   advanceIdle: (seconds: number) => void;
   freeze: (on: boolean) => void;
@@ -52,7 +52,12 @@ function boot(): void {
     app.boot();
 
     // Expose dev/test hooks in DEV or when explicitly enabled
-    if (import.meta.env.DEV || import.meta.env.VITE_EXPOSE_DEBUG === '1' || app.flags.debug) {
+    if (
+      import.meta.env.DEV ||
+      import.meta.env.VITE_EXPOSE_DEBUG === '1' ||
+      app.flags.debug ||
+      app.flags.compare
+    ) {
       window.__grass = {
         app,
         getState: () => app.store.getState(),
@@ -63,8 +68,8 @@ function boot(): void {
         setMood: (m: MoodName) => {
           app.setMood(m);
         },
-        setLying: (l: boolean) => {
-          app.setLying(l);
+        setLying: (l: boolean, immediate = false) => {
+          app.setLying(l, immediate);
         },
         setIdle: (i: boolean) => {
           app.setIdle(i);

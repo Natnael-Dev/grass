@@ -323,6 +323,26 @@ export class App {
 
     this.setupEventListeners();
     this.setupLoop();
+
+    if (this.flags.compare) {
+      this.renderer.setDprCap(1.0);
+      if (this.flags.camera === 'lying') {
+        this.setLying(true, true);
+      }
+    }
+
+    if (!this.flags.ui) {
+      if (this.hud?.element) this.hud.element.style.display = 'none';
+      if (this.hintLine?.element) this.hintLine.element.style.display = 'none';
+      if (this.entryScreen?.overlay) this.entryScreen.overlay.style.display = 'none';
+      const overlay =
+        typeof document !== 'undefined' ? document.getElementById('entry-overlay') : null;
+      if (overlay) overlay.style.display = 'none';
+      this.enter(false);
+      if (this.flags.compare && this.flags.camera === 'lying') {
+        this.setLying(true, true);
+      }
+    }
   }
 
   private setupEventListeners(): void {
@@ -586,9 +606,9 @@ export class App {
     return this.world.getFirefliesCount();
   }
 
-  public setLying(lying: boolean): void {
+  public setLying(lying: boolean, immediate = false): void {
     this.store.setState({ lying });
-    this.cameraRig.setLying(lying);
+    this.cameraRig.setLying(lying, immediate);
     this.vignette.setLying(lying);
     this.input.setHolding(lying);
     this.audio.setLyingDown(lying);

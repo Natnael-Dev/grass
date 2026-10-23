@@ -7,6 +7,9 @@ export interface AppFlags {
   debug: boolean;
   seed: number;
   freeze: boolean;
+  compare: boolean;
+  camera: 'vista' | 'lying' | null;
+  ui: boolean;
 }
 
 export function parseFlags(
@@ -23,6 +26,12 @@ export function parseFlags(
 
   const debug = params.get('debug') === '1' || params.get('debug') === 'true';
   const freeze = params.get('freeze') === '1' || params.get('freeze') === 'true';
+  const compare = params.get('compare') === '1' || params.get('compare') === 'true';
+
+  const rawCamera = params.get('camera');
+  const camera = rawCamera === 'lying' || rawCamera === 'vista' ? rawCamera : null;
+
+  const ui = params.get('ui') !== '0' && params.get('ui') !== 'false';
 
   const rawSeed = params.get('seed');
   const seed =
@@ -34,5 +43,8 @@ export function parseFlags(
     debug,
     seed,
     freeze,
+    compare,
+    camera,
+    ui,
   };
 }

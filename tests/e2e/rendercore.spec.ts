@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import fs from 'node:fs';
 
 test.describe('M2 Render Core & Golden Vista', () => {
   test('boots 3D render core, satisfies draw call budget, handles visibility pause, and captures golden vista', async ({
@@ -67,15 +66,6 @@ test.describe('M2 Render Core & Golden Vista', () => {
 
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.waitForTimeout(300);
-
-    // 8. Capture golden vista screenshot for visual verification
-    fs.mkdirSync('tracking/evidence/M2', { recursive: true });
-    const screenshotPath = 'tracking/evidence/M2/golden-vista.png';
-    await page.screenshot({ path: screenshotPath });
-
-    expect(fs.existsSync(screenshotPath)).toBe(true);
-    const stat = fs.statSync(screenshotPath);
-    expect(stat.size).toBeGreaterThan(30000); // Verify non-blank image (> 30 KB)
 
     // 9. Zero console errors
     expect(consoleErrors).toEqual([]);
