@@ -21,7 +21,7 @@ describe('Mood Presets (design-system table compliance)', () => {
     expect(dawn.terrainColor).toBe('#355f3d');
     expect(dawn.ridge).toEqual(['#7a6f9c', '#9a86a8', '#c09aac']);
     expect(dawn.fogColor).toBe('#e8b9a8');
-    expect(dawn.fogDensity).toBe(0.02);
+    expect(dawn.fogDensity).toBe(0.0045);
     expect(dawn.cloudColor).toBe('#ffd2c0');
     expect(dawn.cloudCover).toBe(0.45);
     expect(dawn.starsAmount).toBe(0);
@@ -50,7 +50,7 @@ describe('Mood Presets (design-system table compliance)', () => {
     expect(golden.terrainColor).toBe('#4a7a3a');
     expect(golden.ridge).toEqual(['#8a9a7a', '#b0a890', '#d6bf9a']);
     expect(golden.fogColor).toBe('#f3cf9f');
-    expect(golden.fogDensity).toBe(0.016);
+    expect(golden.fogDensity).toBe(0.0038);
     expect(golden.cloudColor).toBe('#fff0d8');
     expect(golden.cloudCover).toBe(0.4);
     expect(golden.starsAmount).toBe(0);
@@ -79,7 +79,7 @@ describe('Mood Presets (design-system table compliance)', () => {
     expect(night.terrainColor).toBe('#0d2a28');
     expect(night.ridge).toEqual(['#101a3c', '#16254f', '#1d2f62']);
     expect(night.fogColor).toBe('#0f1a3a');
-    expect(night.fogDensity).toBe(0.02);
+    expect(night.fogDensity).toBe(0.0045);
     expect(night.cloudColor).toBe('#3a4a8a');
     expect(night.cloudCover).toBe(0.35);
     expect(night.starsAmount).toBe(1);

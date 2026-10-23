@@ -15,7 +15,7 @@ export class Ridges {
   private readonly materials: THREE.ShaderMaterial[] = [];
 
   public readonly uFogColor = { value: new THREE.Color('#f3cf9f') };
-  public readonly uFogDensity = { value: 0.016 };
+  public readonly uFogDensity = { value: 0.0038 };
 
   public readonly uRidge1Color = { value: new THREE.Color('#8a9a7a') };
   public readonly uRidge2Color = { value: new THREE.Color('#b0a890') };
