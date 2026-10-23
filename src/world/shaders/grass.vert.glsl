@@ -63,9 +63,17 @@ void main() {
   vH = t;
   vRand = rand;
 
-  // 6. Blend blade normal 60% toward terrain up for soft painterly shading
-  vec3 bladeNormal = vec3(-sinY, 0.0, cosY);
-  vNormal = normalize(mix(bladeNormal, vec3(0.0, 1.0, 0.0), 0.6));
+  // 6. Blade normal responding dynamically to yaw, lean, wind, and brush deflection
+  vec3 bitangent = vec3(-sinY, 0.0, cosY);
+  vec3 spine = vec3(local.x, max(0.05 * h, local.y), local.z);
+  vec3 tangent = normalize(spine);
+  vec3 tiltedNormal = cross(bitangent, tangent);
+  if (dot(tiltedNormal, vec3(cosY, 0.0, sinY)) < 0.0) {
+    tiltedNormal = -tiltedNormal;
+  }
+  tiltedNormal = normalize(tiltedNormal);
+  // Soft volumetric blend with terrain up (35% up) for natural meadow translucency
+  vNormal = normalize(mix(tiltedNormal, vec3(0.0, 1.0, 0.0), 0.35));
 
   // 7. Near-camera dither fade factor
   vFade = smoothstep(0.15, 0.55, distance(world, uCamPos));
