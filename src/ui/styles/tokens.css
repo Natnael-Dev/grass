@@ -118,25 +118,11 @@ body.is-touch .btn-enter,
   min-width: 44px;
 }
 
-/* Hide hand cursor on touch devices */
-body.is-touch .hand-cursor,
-.is-touch .hand-cursor {
-  display: none !important;
+#scene {
+  cursor: grab;
 }
-
-@media (pointer: coarse) {
-  .glass-btn {
-    min-height: 44px;
-    min-width: 44px;
-    padding: 0 16px;
-  }
-  .btn-enter {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  .hand-cursor {
-    display: none !important;
-  }
+#scene:active {
+  cursor: grabbing;
 }
 
 /* Hint line 2-line clamp and wrapping */

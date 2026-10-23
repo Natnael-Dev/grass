@@ -3,7 +3,6 @@ import { Pointer } from './Pointer';
 import { GroundRaycaster } from './GroundRaycaster';
 import { BrushTrail } from '../world/BrushTrail';
 import { KeyboardBrush } from './KeyboardBrush';
-import { HandCursor } from '../ui/HandCursor';
 import { terrainHeight } from '../world/terrain';
 import type { QualityTier } from '../core/types';
 
@@ -26,13 +25,10 @@ export class InputCoordinator {
   public readonly groundRaycaster: GroundRaycaster;
   public readonly brushTrail: BrushTrail;
   public readonly keyboardBrush: KeyboardBrush;
-  public readonly handCursor: HandCursor;
 
   private prevGroundHit = new THREE.Vector3();
   private hasPrevGroundHit = false;
   private scratchGroundHit = new THREE.Vector3();
-  private scratchProjected = new THREE.Vector3();
-  private virtualScreenPos = new THREE.Vector2();
 
   private readonly canvas: HTMLCanvasElement;
   private readonly options: InputCoordinatorOptions;
@@ -45,8 +41,6 @@ export class InputCoordinator {
     this.groundRaycaster = new GroundRaycaster();
     this.brushTrail = new BrushTrail(options.quality);
     this.keyboardBrush = new KeyboardBrush();
-    this.handCursor = new HandCursor();
-    this.handCursor.setReducedMotion(options.reducedMotion);
 
     this.pointer.onDown = () => {
       this.options.onActivity?.();
@@ -90,7 +84,6 @@ export class InputCoordinator {
     let groundHit: THREE.Vector3 | null = null;
     let groundSpeed = 0;
     let rustleSpeed = 0;
-    let hasVirtualScreenPos = false;
 
     if (this.keyboardBrush.isActive) {
       this.options.onActivity?.();
@@ -100,13 +93,6 @@ export class InputCoordinator {
       groundHit = this.scratchGroundHit;
       groundSpeed = this.keyboardBrush.speed;
       rustleSpeed = this.keyboardBrush.speed > 0 ? 450 : 0;
-
-      this.scratchProjected.copy(groundHit).project(camera);
-      const canvasWidth = this.canvas.clientWidth || 800;
-      const canvasHeight = this.canvas.clientHeight || 600;
-      this.virtualScreenPos.x = (this.scratchProjected.x * 0.5 + 0.5) * canvasWidth;
-      this.virtualScreenPos.y = (-this.scratchProjected.y * 0.5 + 0.5) * canvasHeight;
-      hasVirtualScreenPos = true;
     } else {
       if (this.pointer.state.deltaX !== 0 || this.pointer.state.deltaY !== 0) {
         this.keyboardBrush.deactivate();
@@ -152,15 +138,6 @@ export class InputCoordinator {
     this.brushTrail.update(dt);
     this.options.onRustleSpeed?.(rustleSpeed);
 
-    // Hand cursor update
-    this.handCursor.update(
-      dt,
-      this.pointer.state,
-      Boolean(groundHit),
-      hasVirtualScreenPos ? this.virtualScreenPos : null,
-      groundSpeed,
-    );
-
     this.pointer.resetDelta();
 
     return {
@@ -174,17 +151,12 @@ export class InputCoordinator {
     this.brushTrail.setTier(tier);
   }
 
-  public setReducedMotion(reduced: boolean): void {
-    this.handCursor.setReducedMotion(reduced);
-  }
+  public setReducedMotion(_reduced: boolean): void {}
 
-  public setHolding(holding: boolean): void {
-    this.handCursor.setHolding(holding);
-  }
+  public setHolding(_holding: boolean): void {}
 
   public dispose(): void {
     this.pointer.dispose();
     this.keyboardBrush.dispose();
-    this.handCursor.dispose();
   }
 }

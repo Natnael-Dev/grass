@@ -1,0 +1,43 @@
+{
+  "capturedAt": "2026-10-23T14:11:58.097Z",
+  "tiers": {
+    "high": {
+      "fps": 60,
+      "tier": "high",
+      "drawCalls": 7,
+      "triangles": 665224,
+      "blades": 90000,
+      "p95": 16.700000762939453
+    },
+    "medium": {
+      "fps": 60,
+      "tier": "medium",
+      "drawCalls": 7,
+      "triangles": 260224,
+      "blades": 45000,
+      "p95": 16.700000762939453
+    },
+    "low": {
+      "fps": 60,
+      "tier": "low",
+      "drawCalls": 7,
+      "triangles": 89224,
+      "blades": 18000,
+      "p95": 16.700000762939453
+    }
+  },
+  "bundle": {
+    "main-BCyc6noi.css": {
+      "rawBytes": 5958
+    },
+    "main-BN1ENXHd.js": {
+      "rawBytes": 671649
+    },
+    "main-BN1ENXHd.js.map": {
+      "rawBytes": 3317660
+    },
+    "notFound-Bm90WGfe.js.map": {
+      "rawBytes": 101
+    }
+  }
+}

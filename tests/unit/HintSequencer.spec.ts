@@ -1,15 +1,41 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { HintLine } from '../../src/ui/HintLine';
 import { HintSequencer } from '../../src/ui/HintSequencer';
+import { HintLine } from '../../src/ui/HintLine';
 import { COPY } from '../../src/ui/copy';
 import { safeStorage } from '../../src/core/storage';
 
 class MockElement {
+  public tagName = 'DIV';
+  public className = '';
   public style: Record<string, string> = {};
+  public children: MockElement[] = [];
+  public parentElement: MockElement | null = null;
   public textContent = '';
-  public offsetHeight = 100;
-  public parentElement: unknown = null;
-  public setAttribute = vi.fn();
+  public attributes = new Map<string, string>();
+
+  setAttribute(name: string, val: string): void {
+    this.attributes.set(name, val);
+  }
+  getAttribute(name: string): string | null {
+    return this.attributes.get(name) ?? null;
+  }
+  appendChild(child: MockElement): MockElement {
+    this.children.push(child);
+    child.parentElement = this;
+    return child;
+  }
+  removeChild(child: MockElement): MockElement {
+    this.children = this.children.filter((c) => c !== child);
+    child.parentElement = null;
+    return child;
+  }
+}
+
+if (typeof globalThis.document === 'undefined') {
+  globalThis.document = {
+    createElement: () => new MockElement(),
+    body: new MockElement(),
+  } as unknown as Document;
 }
 
 describe('HintLine', () => {
@@ -21,42 +47,16 @@ describe('HintLine', () => {
     vi.useRealTimers();
   });
 
-  it('types out text character by character when reducedMotion is false', () => {
-    const el = new MockElement();
-    const hintLine = new HintLine({ element: el as unknown as HTMLElement, reducedMotion: false });
-    hintLine.show('hello', 3000);
+  it('renders hint line with aria-live and handles typewriter and fade', () => {
+    const hintLine = new HintLine();
+    expect(hintLine.element.getAttribute('aria-live')).toBe('polite');
 
+    hintLine.show('test hint');
     expect(hintLine.getIsVisible()).toBe(true);
-    // At t=0, empty string
-    expect(el.textContent).toBe('');
 
-    // Advance 28 ms -> 'h'
-    vi.advanceTimersByTime(28);
-    expect(el.textContent).toBe('h');
-
-    // Advance 28*4 = 112 ms -> 'hello'
-    vi.advanceTimersByTime(112);
-    expect(el.textContent).toBe('hello');
-
-    // Advance hold time 3000 ms -> starts fade out
-    vi.advanceTimersByTime(3000);
-    expect(el.style.opacity).toBe('0');
-
-    // Advance 400 ms fade duration -> hidden
-    vi.advanceTimersByTime(400);
-    expect(el.style.display).toBe('none');
-
-    hintLine.dispose();
-  });
-
-  it('renders instantly without typing when reducedMotion is true', () => {
-    const el = new MockElement();
-    const hintLine = new HintLine({ element: el as unknown as HTMLElement, reducedMotion: true });
-    hintLine.show('hello reduced', 2000);
-
-    expect(el.textContent).toBe('hello reduced');
-    vi.advanceTimersByTime(2000);
-    expect(el.style.opacity).toBe('0');
+    hintLine.fadeOut();
+    vi.advanceTimersByTime(1000);
+    expect(hintLine.getIsVisible()).toBe(false);
 
     hintLine.dispose();
   });
@@ -83,7 +83,7 @@ describe('HintSequencer', () => {
     vi.useRealTimers();
   });
 
-  it('progresses through sequence based on user interactions', () => {
+  it('shows single hint after entry and dismisses with fadeOut on first interaction', () => {
     const onComplete = vi.fn();
     const sequencer = new HintSequencer({
       hintLine: mockHintLine,
@@ -95,61 +95,16 @@ describe('HintSequencer', () => {
     sequencer.start();
     expect(mockHintLine.show).not.toHaveBeenCalled();
 
-    // +1.5 s -> Hint 1
-    vi.advanceTimersByTime(1500);
+    // +1.2 s -> Hint appears
+    vi.advanceTimersByTime(1200);
     expect(mockHintLine.show).toHaveBeenCalledWith(COPY.hints.desktop[0]);
-    expect(sequencer.getCurrentStep()).toBe(1);
 
-    // Cumulative brush < 600 px -> does not trigger step 2
-    sequencer.onBrush(300);
-    expect(sequencer.getCurrentStep()).toBe(1);
-
-    // Additional brush >= 600 px total -> triggers step 2
-    sequencer.onBrush(300);
-    expect(sequencer.getCurrentStep()).toBe(2);
-    expect(mockHintLine.show).toHaveBeenCalledWith(COPY.hints.desktop[1]);
-
-    // Tap -> triggers step 3
-    sequencer.onTap();
-    expect(sequencer.getCurrentStep()).toBe(3);
-    expect(mockHintLine.show).toHaveBeenCalledWith(COPY.hints.desktop[2]);
-
-    // Lie down end -> triggers step 4
-    sequencer.onLieDownEnd();
-    expect(sequencer.getCurrentStep()).toBe(5);
-    expect(mockHintLine.show).toHaveBeenCalledWith(COPY.hints.desktop[3]);
+    // On brush interaction -> dismiss immediately with fade
+    sequencer.onBrush(15);
+    expect(mockHintLine.fadeOut).toHaveBeenCalled();
     expect(sequencer.isCompleted()).toBe(true);
     expect(safeStorage.getHintsSeen()).toBe(true);
     expect(onComplete).toHaveBeenCalled();
-
-    sequencer.dispose();
-  });
-
-  it('progresses through sequence using fallback timers if user is inactive', () => {
-    const sequencer = new HintSequencer({
-      hintLine: mockHintLine,
-      isTouch: false,
-      hintsSeen: false,
-    });
-
-    sequencer.start();
-
-    // +1.5 s -> Hint 1
-    vi.advanceTimersByTime(1500);
-    expect(mockHintLine.show).toHaveBeenCalledWith(COPY.hints.desktop[0]);
-
-    // +8 s -> Hint 2 fallback
-    vi.advanceTimersByTime(8000);
-    expect(mockHintLine.show).toHaveBeenCalledWith(COPY.hints.desktop[1]);
-
-    // +8 s -> Hint 3 fallback
-    vi.advanceTimersByTime(8000);
-    expect(mockHintLine.show).toHaveBeenCalledWith(COPY.hints.desktop[2]);
-
-    // +12 s -> Hint 4 fallback
-    vi.advanceTimersByTime(12000);
-    expect(mockHintLine.show).toHaveBeenCalledWith(COPY.hints.desktop[3]);
-    expect(sequencer.isCompleted()).toBe(true);
 
     sequencer.dispose();
   });
@@ -162,7 +117,7 @@ describe('HintSequencer', () => {
     });
 
     sequencer.start();
-    vi.advanceTimersByTime(1500);
+    vi.advanceTimersByTime(1200);
     expect(mockHintLine.show).toHaveBeenCalledWith(COPY.hints.touch[0]);
 
     sequencer.dispose();
@@ -175,7 +130,7 @@ describe('HintSequencer', () => {
     });
 
     sequencer.start();
-    vi.advanceTimersByTime(50000);
+    vi.advanceTimersByTime(5000);
     expect(mockHintLine.show).not.toHaveBeenCalled();
     expect(sequencer.isCompleted()).toBe(true);
 

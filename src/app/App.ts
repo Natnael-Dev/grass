@@ -11,7 +11,6 @@ import { Vignette } from '../ui/Vignette';
 import { HintLine } from '../ui/HintLine';
 import { HintSequencer } from '../ui/HintSequencer';
 import { HowItWorks } from '../ui/HowItWorks';
-import { ExitScreen } from '../ui/ExitScreen';
 import { EasterEggs } from '../easter/eggs';
 import { Hud } from '../ui/Hud';
 import { Entry } from '../ui/Entry';
@@ -53,7 +52,6 @@ export class App {
   public readonly hintLine: HintLine;
   public readonly hintSequencer: HintSequencer;
   public readonly howItWorks: HowItWorks;
-  public readonly exitScreen: ExitScreen;
   public readonly easterEggs: EasterEggs;
   public readonly hud: Hud;
   public readonly entryScreen: Entry;
@@ -119,7 +117,11 @@ export class App {
     return this.input.keyboardBrush;
   }
   public get handCursor() {
-    return this.input.handCursor;
+    return {
+      isLying: () => false,
+      setHolding: () => {},
+      dispose: () => {},
+    };
   }
   public get gestureClassifier() {
     return {
@@ -264,12 +266,6 @@ export class App {
       },
     });
 
-    this.exitScreen = new ExitScreen({
-      onRerun: () => {
-        this.store.setState({ phase: 'running' });
-      },
-    });
-
     this.easterEggs = new EasterEggs({
       hintLine: this.hintLine,
       onExitTriggered: () => this.triggerExit(),
@@ -283,8 +279,6 @@ export class App {
       onMoodChange: (m) => this.setMood(m),
       onMuteToggle: (muted) => this.setMuted(muted),
       onOpenHelp: () => this.openHelp(),
-      onUptimeMilestone3: () => this.easterEggs.onUptime3Min(),
-      onUptimeMilestone10: () => this.easterEggs.onUptime10Min(),
     });
 
     this.entryScreen = new Entry({
@@ -377,11 +371,6 @@ export class App {
             this.closeHelp();
             return;
           }
-          if (this.exitScreen.getIsOpen()) {
-            this.exitScreen.hide();
-            this.store.setState({ phase: 'running' });
-            return;
-          }
         }
 
         if (e.key.toLowerCase() === 'm') {
@@ -406,10 +395,8 @@ export class App {
 
       this.visibilityHandler = () => {
         if (typeof document !== 'undefined' && document.hidden) {
-          this.hud.uptime.pause();
           this.audio.handleVisibilityChange(true);
         } else if (typeof document !== 'undefined' && !document.hidden) {
-          this.hud.uptime.resume();
           this.audio.handleVisibilityChange(false);
         }
       };
@@ -506,7 +493,6 @@ export class App {
     this.cameraRig.startEntry();
     this.store.setState({ phase: 'running' });
     this.hintSequencer.start();
-    this.hud.uptime.start();
     this.entryScreen.triggerEnter(viaKeyboard);
     if (viaKeyboard) {
       const focusDelay = this.store.getState().reducedMotion ? 450 : 950;
@@ -560,10 +546,7 @@ export class App {
     this.store.setState({ helpOpen: false });
   }
 
-  public triggerExit(): void {
-    this.store.setState({ phase: 'exited' });
-    this.exitScreen.show();
-  }
+  public triggerExit(): void {}
 
   public onTap(x: number, y: number): void {
     const hit = this.input.groundRaycaster.intersect(
@@ -701,7 +684,6 @@ export class App {
     this.hintSequencer.dispose();
     this.hud.dispose();
     this.howItWorks.dispose();
-    this.exitScreen.dispose();
     this.easterEggs.dispose();
     this.entryScreen.dispose();
     if (this.contextLostTimeoutId !== null) {

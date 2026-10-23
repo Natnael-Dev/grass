@@ -105,15 +105,13 @@ function boot(): void {
         showHint: (text: string) => {
           app.hintLine.show(text);
         },
-        getUptime: () => app.hud.uptime.getSeconds(),
-        setUptime: (seconds: number) => {
-          app.hud.uptime.setSeconds(seconds);
-        },
+        getUptime: () => 0,
+        setUptime: () => {},
         triggerExit: () => {
           app.triggerExit();
         },
         isHelpOpen: () => app.howItWorks.getIsOpen(),
-        isExitOpen: () => app.exitScreen.getIsOpen(),
+        isExitOpen: () => false,
       };
     }
   } catch (error) {

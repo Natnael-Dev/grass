@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MoodSwitch, SoundToggle } from '../../src/ui/Hud';
-import { Uptime } from '../../src/ui/Uptime';
 import { Hud } from '../../src/ui/Hud';
 
 // Lightweight DOM shim for unit testing DOM components in Node runner
@@ -147,52 +146,6 @@ describe('SoundToggle', () => {
     expect(toggle.element.getAttribute('aria-label')).toBe('sound off');
 
     toggle.dispose();
-  });
-});
-
-describe('Uptime', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it('formats seconds into mm:ss display', () => {
-    const uptime = new Uptime();
-    expect(uptime.element.textContent).toBe('uptime outside: 00:00');
-
-    uptime.setSeconds(65);
-    expect(uptime.element.textContent).toBe('uptime outside: 01:05');
-
-    uptime.advance(5);
-    expect(uptime.element.textContent).toBe('uptime outside: 01:10');
-
-    uptime.dispose();
-  });
-
-  it('triggers 3-minute and 10-minute milestones', () => {
-    const onMinute3 = vi.fn();
-    const onMinute10 = vi.fn();
-    const uptime = new Uptime({ onMinute3, onMinute10 });
-
-    uptime.setSeconds(179);
-    expect(onMinute3).not.toHaveBeenCalled();
-
-    uptime.tick(); // 180s
-    expect(onMinute3).toHaveBeenCalledTimes(1);
-
-    uptime.tick(); // 181s - should not trigger again
-    expect(onMinute3).toHaveBeenCalledTimes(1);
-
-    uptime.setSeconds(599);
-    expect(onMinute10).not.toHaveBeenCalled();
-
-    uptime.tick(); // 600s
-    expect(onMinute10).toHaveBeenCalledTimes(1);
-
-    uptime.dispose();
   });
 });
 

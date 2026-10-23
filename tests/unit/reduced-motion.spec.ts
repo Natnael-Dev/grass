@@ -3,16 +3,8 @@ import { Grass } from '../../src/world/Grass';
 import { Fireflies } from '../../src/world/Fireflies';
 import { MoodController } from '../../src/world/MoodController';
 import { CameraRig } from '../../src/camera/CameraRig';
-import { HandCursor } from '../../src/ui/HandCursor';
 import { Entry } from '../../src/ui/Entry';
 import { Store } from '../../src/app/store';
-
-class MockCursorElement {
-  public style: Record<string, string> = {};
-  public dataset: Record<string, string> = {};
-  public innerHTML = '';
-  public remove = vi.fn();
-}
 
 class MockOverlayElement {
   public style: Record<string, string> = {};
@@ -119,33 +111,6 @@ describe('Reduced Motion Synchronization', () => {
     rig.startEntry();
     expect(rig.camera.position.x).toBe(0);
     expect(rig.camera.position.z).toBe(10);
-  });
-
-  it('HandCursor: forces zero rotational tilt under reduced motion', () => {
-    const mockEl = new MockCursorElement();
-    const cursor = new HandCursor(mockEl as unknown as HTMLElement);
-    cursor.setReducedMotion(true);
-
-    cursor.update(
-      0.016,
-      {
-        clientX: 200,
-        clientY: 300,
-        deltaX: 45, // Rapid rightward motion
-        deltaY: 0,
-        isDown: false,
-        isInside: true,
-        pointerType: 'mouse',
-      },
-      true, // isOverTerrain
-      null,
-      2.5, // fast speed
-    );
-
-    expect(cursor.currentRot).toBe(0);
-    expect(cursor.targetRot).toBe(0);
-    expect(mockEl.style.transform).toContain('rotate(0.00deg)');
-    cursor.dispose();
   });
 
   it('Entry: uses 400ms fade transition under reduced motion', () => {

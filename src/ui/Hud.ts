@@ -1,4 +1,3 @@
-import { Uptime } from './Uptime';
 import { ICONS } from './icons';
 import { COPY } from './copy';
 import type { MoodName } from '../core/types';
@@ -134,15 +133,12 @@ export interface HudOptions {
   onMoodChange?: (mood: MoodName) => void;
   onMuteToggle?: (muted: boolean) => void;
   onOpenHelp?: () => void;
-  onUptimeMilestone3?: () => void;
-  onUptimeMilestone10?: () => void;
 }
 
 export class Hud {
   public readonly element: HTMLElement;
   public readonly moodSwitch: MoodSwitch;
   public readonly soundToggle: SoundToggle;
-  public readonly uptime: Uptime;
   public readonly helpButton: HTMLButtonElement;
 
   private activityTimeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -218,13 +214,6 @@ export class Hud {
     bottomControls.appendChild(this.moodSwitch.element);
     this.element.appendChild(bottomControls);
 
-    // 4. Bottom-Right: Uptime counter
-    this.uptime = new Uptime({
-      onMinute3: options.onUptimeMilestone3,
-      onMinute10: options.onUptimeMilestone10,
-    });
-    this.element.appendChild(this.uptime.element);
-
     const targetContainer =
       options.container ?? (typeof document !== 'undefined' ? document.body : null);
     if (targetContainer) {
@@ -267,7 +256,6 @@ export class Hud {
     }
     this.moodSwitch.dispose();
     this.soundToggle.dispose();
-    this.uptime.dispose();
     if (this.element.parentElement) {
       this.element.parentElement.removeChild(this.element);
     }
