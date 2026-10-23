@@ -353,9 +353,9 @@ export class App {
       this.gestureClassifier.onPointerCancel();
     };
 
-    this.canvas.addEventListener('pointerleave', () => {
+    this.pointer.onLeave = () => {
       this.hud.onPointerLeaveScene();
-    });
+    };
 
     if (this.flags.debug) {
       this.statsOverlay = new StatsOverlay();
@@ -719,10 +719,6 @@ export class App {
       console.info(`[AdaptiveQuality] Switched tier to ${tier}: ${reason}`);
     }
     this.store.setState({ quality: tier });
-    this.grass.setTier(tier);
-    this.brushTrail.setTier(tier);
-    this.fireflies.setTier(tier);
-    this.renderer.setDprCap(App.TIER_DPR_CAPS[tier]);
   }
 
   public setMood(mood: MoodName, immediate = false): void {

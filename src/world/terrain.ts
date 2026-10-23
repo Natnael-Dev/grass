@@ -58,5 +58,3 @@ export const TREE_COORDS = {
     return terrainHeight(this.x, this.z);
   },
 } as const;
-
-export { TerrainMesh, Terrain } from './TerrainMesh';

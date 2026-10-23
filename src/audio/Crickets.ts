@@ -12,6 +12,7 @@ export class Crickets {
   // Amplitude modulator
   private amOsc: OscillatorNode | null = null;
   private amGain: GainNode | null = null;
+  private amVca: GainNode | null = null;
 
   // Master cricket gain
   private outputGain: GainNode | null = null;
@@ -51,23 +52,26 @@ export class Crickets {
     this.osc3.connect(this.voiceGain);
 
     // 2. 28 Hz Amplitude Modulation
+    // Base gain offset 0.5 + modulation [-0.5, +0.5] yields [0.0, 1.0] AM swing
     this.amOsc = this.ctx.createOscillator();
     this.amOsc.type = 'sine';
     this.amOsc.frequency.setValueAtTime(28, now);
 
     this.amGain = this.ctx.createGain();
     this.amGain.gain.setValueAtTime(0.5, now);
-
-    const amOffset = this.ctx.createGain();
-    amOffset.gain.setValueAtTime(0.5, now);
-
     this.amOsc.connect(this.amGain);
+
+    this.amVca = this.ctx.createGain();
+    this.amVca.gain.setValueAtTime(0.5, now);
+    this.amGain.connect(this.amVca.gain);
 
     // 3. Output Gain node (controlled by mood.audioCrickets)
     this.outputGain = this.ctx.createGain();
     this.outputGain.gain.setValueAtTime(0, now);
 
-    this.voiceGain.connect(this.outputGain);
+    // Route carrier through modulated VCA into output
+    this.voiceGain.connect(this.amVca);
+    this.amVca.connect(this.outputGain);
     this.outputGain.connect(this.destination);
 
     this.osc1.start();
@@ -94,6 +98,22 @@ export class Crickets {
 
   public getTargetGain(): number {
     return this.targetGain;
+  }
+
+  public getVoiceGain(): GainNode | null {
+    return this.voiceGain;
+  }
+
+  public getAmGain(): GainNode | null {
+    return this.amGain;
+  }
+
+  public getAmVca(): GainNode | null {
+    return this.amVca;
+  }
+
+  public getOutputGain(): GainNode | null {
+    return this.outputGain;
   }
 
   public dispose(): void {
@@ -132,6 +152,22 @@ export class Crickets {
         // Ignore errors
       }
       this.amOsc = null;
+    }
+    if (this.amGain) {
+      try {
+        this.amGain.disconnect();
+      } catch {
+        // Ignore errors
+      }
+      this.amGain = null;
+    }
+    if (this.amVca) {
+      try {
+        this.amVca.disconnect();
+      } catch {
+        // Ignore errors
+      }
+      this.amVca = null;
     }
     if (this.outputGain) {
       this.outputGain.disconnect();

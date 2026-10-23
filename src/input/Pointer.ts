@@ -33,6 +33,7 @@ export class Pointer {
   public onMove?: (clientX: number, clientY: number) => void;
   public onUp?: (clientX: number, clientY: number) => void;
   public onCancel?: () => void;
+  public onLeave?: () => void;
 
   private readonly canvas: HTMLCanvasElement;
   private readonly speedHistory = [0, 0, 0];
@@ -149,6 +150,7 @@ export class Pointer {
     } else if (this.state.activePointerId === e.pointerId && !this.state.isDown) {
       this.state.isInside = false;
     }
+    this.onLeave?.();
   }
 
   private handleRelease(): void {

@@ -149,14 +149,35 @@ describe('Procedural Audio Layers', () => {
   });
 
   describe('Crickets', () => {
-    it('initializes 3 oscillator voices and controls gain via mood', () => {
+    it('initializes 3 oscillator voices, routes carrier through modulated AM VCA, and controls output gain via mood', () => {
       const crickets = new Crickets(
         mockCtx as unknown as AudioContext,
         mockDestination as unknown as AudioNode,
       );
       crickets.start();
 
-      expect(mockCtx.createOscillator).toHaveBeenCalledTimes(4); // 3 voices + 1 AM pulse oscillator
+      const voiceGain = crickets.getVoiceGain() as unknown as MockGainNode;
+      const amGain = crickets.getAmGain() as unknown as MockGainNode;
+      const amVca = crickets.getAmVca() as unknown as MockGainNode;
+      const outputGain = crickets.getOutputGain() as unknown as MockGainNode;
+
+      expect(voiceGain).toBeDefined();
+      expect(amGain).toBeDefined();
+      expect(amVca).toBeDefined();
+      expect(outputGain).toBeDefined();
+
+      // Verify real audio graph signal path:
+      // 1. AM modulator connects to VCA gain parameter
+      expect(amGain.connectedTo).toContain(amVca.gain);
+      // 2. Carrier voices pass into modulated VCA
+      expect(voiceGain.connectedTo).toContain(amVca);
+      // 3. Modulated VCA feeds master output gain
+      expect(amVca.connectedTo).toContain(outputGain);
+      // 4. Output gain feeds destination bus
+      expect(outputGain.connectedTo).toContain(mockDestination);
+
+      // Verify VCA baseline gain is 0.5 (for [0.0, 1.0] swing when modulated by +/-0.5)
+      expect(amVca.gain.value).toBe(0.5);
 
       // Night mood: crickets gain = 0.9
       crickets.update(0.9);
