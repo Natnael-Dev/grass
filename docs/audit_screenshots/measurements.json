@@ -1,0 +1,34 @@
+{
+  "ultra": {
+    "fps": 10,
+    "tier": "medium",
+    "drawCalls": 7,
+    "triangles": 260224,
+    "blades": 45000,
+    "p95": 100
+  },
+  "high": {
+    "fps": 10,
+    "tier": "high",
+    "drawCalls": 7,
+    "triangles": 665224,
+    "blades": 90000,
+    "p95": 100
+  },
+  "medium": {
+    "fps": 10,
+    "tier": "medium",
+    "drawCalls": 7,
+    "triangles": 260224,
+    "blades": 45000,
+    "p95": 100
+  },
+  "low": {
+    "fps": 10,
+    "tier": "low",
+    "drawCalls": 7,
+    "triangles": 89224,
+    "blades": 18000,
+    "p95": 100
+  }
+}
