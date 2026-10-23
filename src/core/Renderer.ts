@@ -41,7 +41,8 @@ export class Renderer {
     });
 
     this.gl.outputColorSpace = THREE.SRGBColorSpace;
-    this.gl.toneMapping = THREE.NoToneMapping;
+    this.gl.toneMapping = THREE.ACESFilmicToneMapping;
+    this.gl.toneMappingExposure = 1.0;
     this.updateSize();
     this.setupResizeObserver();
     this.setupContextLostListeners();
