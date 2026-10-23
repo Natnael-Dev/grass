@@ -35,9 +35,23 @@ export class Pointer {
   public onCancel?: () => void;
   public onLeave?: () => void;
 
+  // Integrated gestures
+  public onTap?: (clientX: number, clientY: number) => void;
+  public onHoldStart?: () => void;
+  public onHoldEnd?: () => void;
+  public onEe2Trigger?: () => void;
+
   private readonly canvas: HTMLCanvasElement;
   private readonly speedHistory = [0, 0, 0];
   private speedIndex = 0;
+
+  // Gesture detection state
+  private downX = 0;
+  private downY = 0;
+  private downTime = 0;
+  private isHolding = false;
+  private holdTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private ee2TimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   private readonly onPointerDownBound: (e: PointerEvent) => void;
   private readonly onPointerMoveBound: (e: PointerEvent) => void;
@@ -83,19 +97,29 @@ export class Pointer {
 
   private updateCoordinates(e: PointerEvent): void {
     const rect = this.canvas.getBoundingClientRect();
-    const width = rect.width > 0 ? rect.width : 1;
-    const height = rect.height > 0 ? rect.height : 1;
+    const width = Math.max(1, rect.width);
+    const height = Math.max(1, rect.height);
 
-    const u = (e.clientX - rect.left) / width;
-    const v = (e.clientY - rect.top) / height;
-
-    this.state.deltaX = e.clientX - this.state.clientX;
-    this.state.deltaY = e.clientY - this.state.clientY;
+    const prevX = this.state.clientX;
+    const prevY = this.state.clientY;
 
     this.state.clientX = e.clientX;
     this.state.clientY = e.clientY;
-    this.state.u = Math.max(0, Math.min(1, u));
-    this.state.v = Math.max(0, Math.min(1, v));
+
+    if (this.state.isDown) {
+      this.state.deltaX = e.clientX - prevX;
+      this.state.deltaY = e.clientY - prevY;
+    } else {
+      this.state.deltaX = 0;
+      this.state.deltaY = 0;
+    }
+
+    const relX = Math.min(Math.max(0, e.clientX - rect.left), width);
+    const relY = Math.min(Math.max(0, e.clientY - rect.top), height);
+
+    this.state.u = relX / width;
+    this.state.v = relY / height;
+
     this.state.ndcX = this.state.u * 2 - 1;
     this.state.ndcY = -(this.state.v * 2 - 1);
     this.state.pointerType = e.pointerType || 'mouse';
@@ -103,13 +127,28 @@ export class Pointer {
 
   private handlePointerDown(e: PointerEvent): void {
     if (this.state.activePointerId !== null && this.state.activePointerId !== e.pointerId) {
-      return; // Ignore secondary touch / pointer
+      return;
     }
 
     this.state.activePointerId = e.pointerId;
     this.state.isDown = true;
     this.state.isInside = true;
     this.updateCoordinates(e);
+
+    this.downX = e.clientX;
+    this.downY = e.clientY;
+    this.downTime = performance.now();
+    this.isHolding = false;
+
+    this.clearGestureTimers();
+    this.holdTimeoutId = setTimeout(() => {
+      this.isHolding = true;
+      this.onHoldStart?.();
+    }, 250);
+
+    this.ee2TimeoutId = setTimeout(() => {
+      this.onEe2Trigger?.();
+    }, 10000);
 
     try {
       this.canvas.setPointerCapture(e.pointerId);
@@ -127,11 +166,31 @@ export class Pointer {
 
     this.state.isInside = true;
     this.updateCoordinates(e);
+
+    if (this.state.isDown && !this.isHolding) {
+      const dist = Math.hypot(e.clientX - this.downX, e.clientY - this.downY);
+      if (dist > 8) {
+        this.clearGestureTimers();
+      }
+    }
+
     this.onMove?.(e.clientX, e.clientY);
   }
 
   private handlePointerUp(e: PointerEvent): void {
     if (this.state.activePointerId === e.pointerId) {
+      this.clearGestureTimers();
+      if (this.isHolding) {
+        this.isHolding = false;
+        this.onHoldEnd?.();
+      } else {
+        const dist = Math.hypot(e.clientX - this.downX, e.clientY - this.downY);
+        const elapsed = performance.now() - this.downTime;
+        if (dist <= 8 && elapsed < 350) {
+          this.onTap?.(e.clientX, e.clientY);
+        }
+      }
+
       this.state.isDown = false;
       this.state.activePointerId = null;
       this.onUp?.(e.clientX, e.clientY);
@@ -154,11 +213,27 @@ export class Pointer {
   }
 
   private handleRelease(): void {
+    this.clearGestureTimers();
+    if (this.isHolding) {
+      this.isHolding = false;
+      this.onHoldEnd?.();
+    }
     this.state.isDown = false;
     this.state.activePointerId = null;
     this.state.deltaX = 0;
     this.state.deltaY = 0;
     this.onCancel?.();
+  }
+
+  private clearGestureTimers(): void {
+    if (this.holdTimeoutId !== null) {
+      clearTimeout(this.holdTimeoutId);
+      this.holdTimeoutId = null;
+    }
+    if (this.ee2TimeoutId !== null) {
+      clearTimeout(this.ee2TimeoutId);
+      this.ee2TimeoutId = null;
+    }
   }
 
   public resetDelta(): void {
@@ -182,6 +257,7 @@ export class Pointer {
   }
 
   public dispose(): void {
+    this.clearGestureTimers();
     this.canvas.removeEventListener('pointerdown', this.onPointerDownBound);
     this.canvas.removeEventListener('pointerleave', this.onPointerLeaveBound);
     this.canvas.removeEventListener('contextmenu', this.onContextMenuBound);

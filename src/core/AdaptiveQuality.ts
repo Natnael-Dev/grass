@@ -51,9 +51,10 @@ export class AdaptiveQuality {
   // Timers and counters
   private warmupElapsedSec = 0;
   private cooldownTimerSec = 0;
+  private evalTimerSec = 0;
   private downgradeCount = 0;
 
-  // Pre-allocated scratch buffer for p95 calculation to prevent GC allocations
+  // Scratch buffer for on-demand p95 calculation (only for metrics/infrequent eval)
   private readonly scratchSortBuffer: Float32Array;
 
   constructor(options: AdaptiveQualityOptions = {}) {
@@ -65,7 +66,8 @@ export class AdaptiveQuality {
     this.downgradeFpsThreshold = options.downgradeFpsThreshold ?? 45.0;
     this.upgradeFpsThreshold = options.upgradeFpsThreshold ?? 58.0;
     this.maxDowngrades = options.maxDowngrades ?? 2;
-    this.allowAutoUpgrade = options.allowAutoUpgrade ?? true;
+    // Default to false (no auto-upgrade per performance spec), but respect option if explicitly passed
+    this.allowAutoUpgrade = options.allowAutoUpgrade ?? false;
     this.onTierChange = options.onTierChange;
 
     this.frameTimesMs = new Float32Array(this.windowSize);
@@ -89,14 +91,13 @@ export class AdaptiveQuality {
   }
 
   public recordFrame(dtSeconds: number): QualityTier {
-    // Discard paused/unfocused frames or abnormally large clamps
     if (dtSeconds <= 0 || dtSeconds > 0.5) {
       return this.currentTier;
     }
 
     const frameTimeMs = dtSeconds * 1000.0;
 
-    // Update running sum and circular buffer
+    // Moving average update
     if (this.sampleCount < this.windowSize) {
       this.runningSumMs += frameTimeMs;
       this.sampleCount++;
@@ -108,7 +109,6 @@ export class AdaptiveQuality {
     this.frameTimesMs[this.headIndex] = frameTimeMs;
     this.headIndex = (this.headIndex + 1) % this.windowSize;
 
-    // Advance warmup and cooldown timers
     if (this.warmupElapsedSec < this.warmupDurationSec) {
       this.warmupElapsedSec += dtSeconds;
       return this.currentTier;
@@ -116,28 +116,35 @@ export class AdaptiveQuality {
 
     if (this.cooldownTimerSec > 0) {
       this.cooldownTimerSec = Math.max(0, this.cooldownTimerSec - dtSeconds);
-      return this.currentTier;
+      if (this.cooldownTimerSec > 0) {
+        return this.currentTier;
+      }
+      this.evalTimerSec = 1.0;
     }
 
-    // If tier is manually locked via URL flag or user override, do not adapt
     if (this.isLocked) {
       return this.currentTier;
     }
 
-    // Require at least half the window before evaluating thresholds
-    if (this.sampleCount < Math.min(30, this.windowSize)) {
-      return this.currentTier;
+    // Rate-limit evaluation to ~1 Hz (or after collecting enough samples in fast loops)
+    this.evalTimerSec += dtSeconds;
+    if (this.evalTimerSec >= 1.0 || (this.sampleCount >= 30 && this.evalTimerSec >= 0.5)) {
+      this.evalTimerSec = 0;
+      this.evaluateAdaptation();
     }
 
-    this.evaluateAdaptation();
     return this.currentTier;
   }
 
   private evaluateAdaptation(): void {
+    if (this.sampleCount < Math.min(30, this.windowSize)) {
+      return;
+    }
+
     const avgFrameTimeMs = this.runningSumMs / this.sampleCount;
     const avgFps = avgFrameTimeMs > 0 ? 1000.0 / avgFrameTimeMs : 60.0;
 
-    // 1. Check for Down-Tiering (< 45 FPS or p95 > 22.2 ms)
+    // 1. Check for Down-Tiering (< 45 FPS or average frame time > 22.2 ms)
     if (avgFps < this.downgradeFpsThreshold) {
       if (this.downgradeCount < this.maxDowngrades && this.currentTier !== 'low') {
         const nextTier = this.currentTier === 'high' ? 'medium' : 'low';
@@ -150,25 +157,12 @@ export class AdaptiveQuality {
       }
     }
 
-    // Check p95 condition if average FPS was borderline
-    if (this.currentTier !== 'low' && this.downgradeCount < this.maxDowngrades) {
-      const p95 = this.getP95FrameTimeMs();
-      if (p95 > 22.2) {
-        const nextTier = this.currentTier === 'high' ? 'medium' : 'low';
-        this.applyTierChange(nextTier, `p95 frame time (${p95.toFixed(1)} ms) exceeded 22.2 ms`);
-        this.downgradeCount++;
-        return;
-      }
-    }
-
-    // 2. Check for Up-Tiering (stable 60 FPS, low variance)
+    // 2. Check for Up-Tiering only if explicitly allowed by options (e.g. tests)
     if (this.allowAutoUpgrade && this.currentTier !== 'high') {
-      // Must have full window of samples to upgrade safely
       if (this.sampleCount >= this.windowSize && avgFps >= this.upgradeFpsThreshold) {
         const p95 = this.getP95FrameTimeMs();
         const stdDev = this.getStdDevMs();
 
-        // Strict stability requirements: p95 <= 18.0 ms and low jitter (stddev <= 3.0 ms)
         if (p95 <= 18.0 && stdDev <= 3.0) {
           const nextTier = this.currentTier === 'low' ? 'medium' : 'high';
           this.applyTierChange(
@@ -187,35 +181,22 @@ export class AdaptiveQuality {
     const prevTier = this.currentTier;
     this.currentTier = newTier;
     this.cooldownTimerSec = this.cooldownDurationSec;
-
-    // Trigger external callback
     this.onTierChange?.(newTier, prevTier, reason);
   }
 
   public setTier(tier: QualityTier, lock = true): void {
-    const prevTier = this.currentTier;
+    const prev = this.currentTier;
     this.currentTier = tier;
     if (lock) {
       this.isLocked = true;
     }
-    if (prevTier !== tier) {
-      this.onTierChange?.(tier, prevTier, 'Manual override');
+    if (prev !== tier) {
+      this.onTierChange?.(tier, prev, lock ? 'Manual override' : 'API setTier');
     }
   }
 
-  public reset(): void {
-    this.headIndex = 0;
-    this.sampleCount = 0;
-    this.runningSumMs = 0;
-    this.warmupElapsedSec = 0;
-    this.cooldownTimerSec = 0;
-    this.downgradeCount = 0;
-    this.frameTimesMs.fill(0);
-  }
-
   public getAverageFrameTimeMs(): number {
-    if (this.sampleCount === 0) return 16.67;
-    return this.runningSumMs / this.sampleCount;
+    return this.sampleCount > 0 ? this.runningSumMs / this.sampleCount : 16.67;
   }
 
   public getAverageFps(): number {
@@ -240,16 +221,17 @@ export class AdaptiveQuality {
 
   public getP95FrameTimeMs(): number {
     if (this.sampleCount === 0) return 16.67;
-
     for (let i = 0; i < this.sampleCount; i++) {
       this.scratchSortBuffer[i] = this.frameTimesMs[i]!;
     }
+    const activeSlice = this.scratchSortBuffer.subarray(0, this.sampleCount);
+    activeSlice.sort();
 
-    const sub = this.scratchSortBuffer.subarray(0, this.sampleCount);
-    sub.sort();
-
-    const idx = Math.min(this.sampleCount - 1, Math.floor(this.sampleCount * 0.95));
-    return sub[idx] ?? 16.67;
+    const p95Index = Math.min(
+      this.sampleCount - 1,
+      Math.max(0, Math.ceil(0.95 * this.sampleCount) - 1),
+    );
+    return activeSlice[p95Index] ?? 16.67;
   }
 
   public getMetrics(): FrameMetrics {
@@ -265,5 +247,16 @@ export class AdaptiveQuality {
       warmupRemainingSec: Math.max(0, this.warmupDurationSec - this.warmupElapsedSec),
       cooldownRemainingSec: this.cooldownTimerSec,
     };
+  }
+
+  public reset(): void {
+    this.headIndex = 0;
+    this.sampleCount = 0;
+    this.runningSumMs = 0;
+    this.warmupElapsedSec = 0;
+    this.cooldownTimerSec = 0;
+    this.evalTimerSec = 0;
+    this.downgradeCount = 0;
+    this.frameTimesMs.fill(0);
   }
 }

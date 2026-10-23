@@ -7,215 +7,162 @@ export interface HowItWorksOptions {
 }
 
 export class HowItWorks {
+  public readonly dialog: HTMLDialogElement;
   public readonly scrim: HTMLElement;
-  public readonly dialog: HTMLElement;
   public readonly closeButton: HTMLButtonElement;
   private opener: HTMLElement | null = null;
-  private isVisible = false;
+  private isOpen = false;
   private onClose?: () => void;
-  private keydownListener: (e: KeyboardEvent) => void;
+  private keydownListener?: (e: KeyboardEvent) => void;
 
   constructor(options: HowItWorksOptions = {}) {
     this.onClose = options.onClose;
 
-    // 1. Scrim
-    this.scrim = document.createElement('div');
-    this.scrim.className = 'how-it-works-scrim';
-    this.scrim.style.position = 'fixed';
-    this.scrim.style.inset = '0';
-    this.scrim.style.backgroundColor = 'rgba(0, 0, 0, 0.55)';
-    this.scrim.style.backdropFilter = 'blur(6px)';
-    this.scrim.style.display = 'none';
-    this.scrim.style.alignItems = 'center';
-    this.scrim.style.justifyContent = 'center';
-    this.scrim.style.padding = '16px';
-    this.scrim.style.zIndex = '1000';
-
-    // 2. Dialog Panel
-    this.dialog = document.createElement('div');
+    this.dialog = document.createElement('dialog');
     this.dialog.className = 'how-it-works-dialog glass-panel';
     this.dialog.setAttribute('role', 'dialog');
     this.dialog.setAttribute('aria-modal', 'true');
     this.dialog.setAttribute('aria-labelledby', 'how-it-works-title');
-    this.dialog.style.position = 'relative';
-    this.dialog.style.width = '100%';
+    this.dialog.style.position = 'fixed';
+    this.dialog.style.inset = '0';
+    this.dialog.style.margin = 'auto';
+    this.dialog.style.width = 'calc(100% - 32px)';
     this.dialog.style.maxWidth = '520px';
     this.dialog.style.maxHeight = '85vh';
     this.dialog.style.overflowY = 'auto';
     this.dialog.style.padding = '24px';
     this.dialog.style.fontFamily = 'var(--font-ui)';
     this.dialog.style.color = 'var(--text)';
-    this.dialog.style.display = 'flex';
-    this.dialog.style.flexDirection = 'column';
-    this.dialog.style.gap = 'var(--space-4)';
+    this.dialog.style.border = '1px solid var(--glass-border)';
+    this.dialog.style.borderRadius = 'var(--radius-l)';
+    this.dialog.style.background = 'var(--glass-bg)';
+    this.dialog.style.backdropFilter = 'blur(16px)';
+    this.dialog.style.zIndex = '1000';
+    this.dialog.style.display = 'none';
+
+    this.scrim = this.dialog;
 
     // Header
     const header = document.createElement('div');
     header.style.display = 'flex';
     header.style.alignItems = 'center';
     header.style.justifyContent = 'space-between';
+    header.style.marginBottom = 'var(--space-4)';
 
     const title = document.createElement('h2');
     title.id = 'how-it-works-title';
     title.textContent = COPY.howItWorks.title;
-    title.style.fontFamily = 'var(--font-mono)';
+    title.style.margin = '0';
     title.style.fontSize = 'var(--size-text-l)';
     title.style.fontWeight = '600';
-    title.style.margin = '0';
+    header.appendChild(title);
 
     this.closeButton = document.createElement('button');
     this.closeButton.type = 'button';
-    this.closeButton.className = 'glass-btn close-btn';
+    this.closeButton.className = 'glass-btn modal-close-btn';
     this.closeButton.setAttribute('aria-label', COPY.howItWorks.closeButton);
-    this.closeButton.title = `${COPY.howItWorks.closeButton} (Esc)`;
-    this.closeButton.innerHTML = `${ICONS.close}<span>${COPY.howItWorks.closeButton}</span>`;
+    this.closeButton.innerHTML = ICONS.close;
     this.closeButton.addEventListener('click', () => {
       this.close();
     });
-
-    header.appendChild(title);
     header.appendChild(this.closeButton);
     this.dialog.appendChild(header);
 
-    // "What is this" section
-    const whatSection = document.createElement('p');
-    whatSection.className = 'dialog-what';
-    whatSection.style.fontSize = 'var(--size-text-m)';
-    whatSection.style.lineHeight = '1.5';
-    whatSection.style.color = 'var(--text-muted)';
-    whatSection.textContent = COPY.howItWorks.what;
-    this.dialog.appendChild(whatSection);
+    // Paragraph
+    const what = document.createElement('p');
+    what.textContent = COPY.howItWorks.what;
+    what.style.margin = '0 0 var(--space-4) 0';
+    what.style.color = 'var(--text-muted)';
+    this.dialog.appendChild(what);
 
-    // Controls Table
-    const tableContainer = document.createElement('div');
-    tableContainer.style.overflowX = 'auto';
+    // Body: controls list
+    const list = document.createElement('ul');
+    list.style.listStyle = 'none';
+    list.style.margin = '0';
+    list.style.padding = '0';
+    list.style.display = 'flex';
+    list.style.flexDirection = 'column';
+    list.style.gap = 'var(--space-3)';
 
-    const table = document.createElement('table');
-    table.className = 'controls-table';
-    table.style.width = '100%';
-    table.style.borderCollapse = 'collapse';
-    table.style.fontFamily = 'var(--font-mono)';
-    table.style.fontSize = 'var(--size-text-s)';
-    table.style.textAlign = 'left';
+    for (const item of COPY.howItWorks.controls) {
+      const li = document.createElement('li');
+      li.style.display = 'flex';
+      li.style.justifyContent = 'space-between';
+      li.style.alignItems = 'center';
+      li.style.gap = 'var(--space-2)';
 
-    const thead = document.createElement('thead');
-    thead.innerHTML = `
-      <tr style="border-bottom: 1px solid var(--panel-border); color: var(--text-muted);">
-        <th style="padding: 6px 8px;"></th>
-        <th style="padding: 6px 8px;">mouse</th>
-        <th style="padding: 6px 8px;">touch</th>
-        <th style="padding: 6px 8px;">keyboard</th>
-      </tr>
-    `;
-    table.appendChild(thead);
+      const action = document.createElement('span');
+      action.textContent = item.action;
+      action.style.color = 'var(--text)';
+      action.style.fontWeight = '500';
 
-    const tbody = document.createElement('tbody');
-    for (const row of COPY.howItWorks.controls) {
-      const tr = document.createElement('tr');
-      tr.style.borderBottom = '1px solid rgba(255, 255, 255, 0.08)';
-      tr.innerHTML = `
-        <td style="padding: 6px 8px; color: var(--text);">${row.action}</td>
-        <td style="padding: 6px 8px; color: var(--text-muted);">${row.mouse}</td>
-        <td style="padding: 6px 8px; color: var(--text-muted);">${row.touch}</td>
-        <td style="padding: 6px 8px; color: var(--text-muted);">${row.keyboard}</td>
-      `;
-      tbody.appendChild(tr);
+      const shortcut = document.createElement('span');
+      shortcut.textContent = `${item.mouse} · ${item.keyboard}`;
+      shortcut.style.color = 'var(--text-muted)';
+      shortcut.style.fontFamily = 'var(--font-mono)';
+      shortcut.style.fontSize = 'var(--size-text-s)';
+
+      li.appendChild(action);
+      li.appendChild(shortcut);
+      list.appendChild(li);
     }
-    table.appendChild(tbody);
-    tableContainer.appendChild(table);
-    this.dialog.appendChild(tableContainer);
+    this.dialog.appendChild(list);
 
-    // Q&A section
-    const qaContainer = document.createElement('div');
-    qaContainer.style.display = 'flex';
-    qaContainer.style.flexDirection = 'column';
-    qaContainer.style.gap = 'var(--space-2)';
-    qaContainer.style.fontSize = 'var(--size-text-s)';
-    qaContainer.style.lineHeight = '1.4';
-
-    for (const item of COPY.howItWorks.qa) {
-      const p = document.createElement('p');
-      p.innerHTML = `<strong style="color: var(--text);">${item.q}</strong> <span style="color: var(--text-muted);">${item.a}</span>`;
-      qaContainer.appendChild(p);
+    this.keydownListener = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && this.isOpen) {
+        e.preventDefault();
+        this.close();
+      }
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('keydown', this.keydownListener);
     }
-    this.dialog.appendChild(qaContainer);
 
-    // Credits section
-    const credits = document.createElement('div');
-    credits.className = 'dialog-credits';
-    credits.style.fontSize = 'var(--size-text-s)';
-    credits.style.color = 'var(--text-muted)';
-    credits.style.paddingTop = 'var(--space-2)';
-    credits.style.borderTop = '1px solid var(--panel-border)';
-    credits.textContent = COPY.howItWorks.credits;
-    this.dialog.appendChild(credits);
+    this.dialog.addEventListener('cancel', (e) => {
+      e.preventDefault();
+      this.close();
+    });
 
-    this.scrim.appendChild(this.dialog);
-
-    // Click on scrim outside dialog closes
-    this.scrim.addEventListener('click', (e) => {
-      if (e.target === this.scrim) {
+    this.dialog.addEventListener('click', (e) => {
+      if (e.target === this.dialog) {
         this.close();
       }
     });
 
-    // Keyboard navigation: Escape & Focus Trap
-    this.keydownListener = (e: KeyboardEvent) => {
-      if (!this.isVisible) return;
-
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        this.close();
-        return;
-      }
-
-      if (e.key === 'Tab') {
-        const focusable = this.getFocusableElements();
-        if (focusable.length === 0) return;
-
-        const first = focusable[0]!;
-        const last = focusable[focusable.length - 1]!;
-
-        if (e.shiftKey) {
-          if (document.activeElement === first) {
-            e.preventDefault();
-            last.focus();
-          }
-        } else {
-          if (document.activeElement === last) {
-            e.preventDefault();
-            first.focus();
-          }
-        }
-      }
-    };
-
-    window.addEventListener('keydown', this.keydownListener);
-
-    const parent = options.container ?? document.body;
-    parent.appendChild(this.scrim);
+    const targetContainer =
+      options.container ?? (typeof document !== 'undefined' ? document.body : null);
+    if (targetContainer) {
+      targetContainer.appendChild(this.dialog);
+    }
   }
 
-  public getFocusableElements(): HTMLElement[] {
-    const selector =
-      'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
-    return Array.from(this.dialog.querySelectorAll<HTMLElement>(selector));
-  }
-
-  public open(triggerElement?: HTMLElement): void {
-    if (this.isVisible) return;
-    this.opener =
-      triggerElement ??
-      (typeof document !== 'undefined' ? (document.activeElement as HTMLElement) : null);
-    this.isVisible = true;
-    this.scrim.style.display = 'flex';
+  public open(opener?: HTMLElement): void {
+    this.isOpen = true;
+    this.opener = opener ?? (document.activeElement as HTMLElement | null);
+    this.dialog.style.display = 'flex';
+    if (typeof this.dialog.showModal === 'function') {
+      try {
+        this.dialog.showModal();
+      } catch {
+        this.dialog.setAttribute('open', '');
+      }
+    } else {
+      this.dialog.setAttribute('open', '');
+    }
     this.closeButton.focus();
   }
 
   public close(): void {
-    if (!this.isVisible) return;
-    this.isVisible = false;
-    this.scrim.style.display = 'none';
+    if (!this.isOpen) return;
+    this.isOpen = false;
+    this.dialog.style.display = 'none';
+    if (this.dialog.open) {
+      if (typeof this.dialog.close === 'function') {
+        this.dialog.close();
+      } else {
+        this.dialog.removeAttribute('open');
+      }
+    }
     if (this.opener && typeof this.opener.focus === 'function') {
       this.opener.focus();
     }
@@ -224,15 +171,15 @@ export class HowItWorks {
   }
 
   public getIsOpen(): boolean {
-    return this.isVisible;
+    return this.isOpen;
   }
 
   public dispose(): void {
-    if (typeof window !== 'undefined') {
+    if (this.keydownListener && typeof window !== 'undefined') {
       window.removeEventListener('keydown', this.keydownListener);
     }
-    if (this.scrim.parentElement) {
-      this.scrim.parentElement.removeChild(this.scrim);
+    if (this.dialog.parentElement) {
+      this.dialog.parentElement.removeChild(this.dialog);
     }
   }
 }

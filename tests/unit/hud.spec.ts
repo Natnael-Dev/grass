@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { MoodSwitch } from '../../src/ui/MoodSwitch';
-import { SoundToggle } from '../../src/ui/SoundToggle';
+import { MoodSwitch, SoundToggle } from '../../src/ui/Hud';
 import { Uptime } from '../../src/ui/Uptime';
 import { Hud } from '../../src/ui/Hud';
 

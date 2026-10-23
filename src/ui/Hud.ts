@@ -1,9 +1,131 @@
-import { MoodSwitch } from './MoodSwitch';
-import { SoundToggle } from './SoundToggle';
 import { Uptime } from './Uptime';
 import { ICONS } from './icons';
 import { COPY } from './copy';
 import type { MoodName } from '../core/types';
+
+export interface SoundToggleOptions {
+  initialMuted?: boolean;
+  onToggle?: (muted: boolean) => void;
+}
+
+export class SoundToggle {
+  public readonly element: HTMLButtonElement;
+  private muted: boolean;
+  private onToggle?: (muted: boolean) => void;
+
+  constructor(options: SoundToggleOptions = {}) {
+    this.muted = options.initialMuted ?? false;
+    this.onToggle = options.onToggle;
+
+    this.element = document.createElement('button');
+    this.element.type = 'button';
+    this.element.className = 'glass-btn sound-toggle-btn';
+    this.element.title = 'toggle sound (m)';
+
+    this.render();
+
+    this.element.addEventListener('click', () => {
+      this.setMuted(!this.muted);
+      this.onToggle?.(this.muted);
+    });
+  }
+
+  public setMuted(muted: boolean): void {
+    if (this.muted === muted) return;
+    this.muted = muted;
+    this.render();
+  }
+
+  public getMuted(): boolean {
+    return this.muted;
+  }
+
+  private render(): void {
+    const isSoundOn = !this.muted;
+    this.element.setAttribute('aria-pressed', isSoundOn ? 'true' : 'false');
+    this.element.setAttribute(
+      'aria-label',
+      isSoundOn ? COPY.hud.soundAriaLabel.on : COPY.hud.soundAriaLabel.off,
+    );
+    this.element.innerHTML = isSoundOn ? ICONS.soundOn : ICONS.soundOff;
+  }
+
+  public dispose(): void {
+    if (this.element.parentElement) {
+      this.element.parentElement.removeChild(this.element);
+    }
+  }
+}
+
+export interface MoodSwitchOptions {
+  initialMood?: MoodName;
+  onSelect?: (mood: MoodName) => void;
+}
+
+export class MoodSwitch {
+  public readonly element: HTMLElement;
+  private currentMood: MoodName;
+  private buttons: Map<MoodName, HTMLButtonElement> = new Map();
+  private onSelect?: (mood: MoodName) => void;
+
+  constructor(options: MoodSwitchOptions = {}) {
+    this.currentMood = options.initialMood ?? 'golden';
+    this.onSelect = options.onSelect;
+
+    this.element = document.createElement('div');
+    this.element.className = 'mood-switch glass-panel';
+    this.element.setAttribute('role', 'group');
+    this.element.setAttribute('aria-label', 'mood selection');
+    this.element.style.display = 'inline-flex';
+    this.element.style.alignItems = 'center';
+    this.element.style.gap = 'var(--space-1)';
+    this.element.style.padding = '3px';
+    this.element.style.borderRadius = 'var(--radius-pill)';
+
+    const moods: { name: MoodName; icon: string; keyHint: string }[] = [
+      { name: 'dawn', icon: ICONS.dawn, keyHint: '1' },
+      { name: 'golden', icon: ICONS.golden, keyHint: '2' },
+      { name: 'night', icon: ICONS.night, keyHint: '3' },
+    ];
+
+    for (const { name, icon, keyHint } of moods) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'glass-btn mood-btn';
+      btn.setAttribute('aria-pressed', name === this.currentMood ? 'true' : 'false');
+      btn.title = `${name} (${keyHint})`;
+      btn.innerHTML = `${icon}<span>${COPY.hud.moods[name]}</span>`;
+
+      btn.addEventListener('click', () => {
+        this.setMood(name);
+        this.onSelect?.(name);
+      });
+
+      this.buttons.set(name, btn);
+      this.element.appendChild(btn);
+    }
+  }
+
+  public setMood(mood: MoodName): void {
+    if (this.currentMood === mood) return;
+    this.currentMood = mood;
+
+    for (const [name, btn] of this.buttons.entries()) {
+      btn.setAttribute('aria-pressed', name === mood ? 'true' : 'false');
+    }
+  }
+
+  public getMood(): MoodName {
+    return this.currentMood;
+  }
+
+  public dispose(): void {
+    this.buttons.clear();
+    if (this.element.parentElement) {
+      this.element.parentElement.removeChild(this.element);
+    }
+  }
+}
 
 export interface HudOptions {
   container?: HTMLElement;
@@ -67,89 +189,75 @@ export class Hud {
       initialMuted: options.initialMuted,
       onToggle: options.onMuteToggle,
     });
+    topControls.appendChild(this.soundToggle.element);
 
     this.helpButton = document.createElement('button');
     this.helpButton.type = 'button';
     this.helpButton.className = 'glass-btn help-btn';
+    this.helpButton.title = 'how it works (?)';
     this.helpButton.setAttribute('aria-label', COPY.hud.helpAriaLabel);
-    this.helpButton.title = `${COPY.hud.helpButton} (?)`;
-    this.helpButton.innerHTML = `${ICONS.help}<span>${COPY.hud.helpButton}</span>`;
+    this.helpButton.innerHTML = ICONS.help;
     this.helpButton.addEventListener('click', () => {
       options.onOpenHelp?.();
     });
-
     topControls.appendChild(this.helpButton);
-    topControls.appendChild(this.soundToggle.element);
     this.element.appendChild(topControls);
 
-    // 3. Bottom-Left: Uptime
+    // 3. Bottom-Left: Mood switch
     const bottomControls = document.createElement('div');
-    bottomControls.className = 'hud-uptime-container';
+    bottomControls.className = 'hud-bottom-controls';
     bottomControls.style.position = 'absolute';
     bottomControls.style.bottom = 'max(16px, var(--safe-bottom))';
     bottomControls.style.left = 'max(16px, var(--safe-left))';
     bottomControls.style.pointerEvents = 'auto';
 
-    this.uptime = new Uptime({
-      onMinute3: options.onUptimeMilestone3,
-      onMinute10: options.onUptimeMilestone10,
-    });
-    bottomControls.appendChild(this.uptime.element);
-    this.element.appendChild(bottomControls);
-
-    // 4. Bottom-Centre: MoodSwitch
-    const moodContainer = document.createElement('div');
-    moodContainer.className = 'hud-mood-container';
-    moodContainer.style.position = 'absolute';
-    moodContainer.style.bottom = 'max(16px, var(--safe-bottom))';
-    moodContainer.style.left = '50%';
-    moodContainer.style.transform = 'translateX(-50%)';
-    moodContainer.style.pointerEvents = 'auto';
-
     this.moodSwitch = new MoodSwitch({
       initialMood: options.initialMood,
       onSelect: options.onMoodChange,
     });
-    moodContainer.appendChild(this.moodSwitch.element);
-    this.element.appendChild(moodContainer);
+    bottomControls.appendChild(this.moodSwitch.element);
+    this.element.appendChild(bottomControls);
 
-    // Focus restoration on HUD element focus
-    this.element.addEventListener('focusin', () => {
-      this.restoreOpacity();
+    // 4. Bottom-Right: Uptime counter
+    this.uptime = new Uptime({
+      onMinute3: options.onUptimeMilestone3,
+      onMinute10: options.onUptimeMilestone10,
     });
+    this.element.appendChild(this.uptime.element);
 
-    const parent = options.container ?? document.body;
-    parent.appendChild(this.element);
+    const targetContainer =
+      options.container ?? (typeof document !== 'undefined' ? document.body : null);
+    if (targetContainer) {
+      targetContainer.appendChild(this.element);
+    }
   }
 
   public onPointerSceneActivity(): void {
     this.pointerOverScene = true;
-    if (this.activityTimeoutId !== null) {
-      clearTimeout(this.activityTimeoutId);
-    }
-
-    this.activityTimeoutId = setTimeout(() => {
-      if (this.pointerOverScene) {
-        this.element.style.opacity = '0.45';
-      }
-    }, 4000);
+    this.fadeHudOutTemporarily();
   }
 
   public onPointerLeaveScene(): void {
     this.pointerOverScene = false;
-    this.restoreOpacity();
+    this.showHudImmediately();
   }
 
-  public restoreOpacity(): void {
+  private fadeHudOutTemporarily(): void {
+    if (this.activityTimeoutId !== null) {
+      clearTimeout(this.activityTimeoutId);
+    }
+    this.activityTimeoutId = setTimeout(() => {
+      this.element.style.opacity = '0.45';
+      this.activityTimeoutId = null;
+    }, 4000);
+  }
+
+  private showHudImmediately(): void {
     if (this.activityTimeoutId !== null) {
       clearTimeout(this.activityTimeoutId);
       this.activityTimeoutId = null;
     }
     this.element.style.opacity = '1';
-  }
-
-  public setVisible(visible: boolean): void {
-    this.element.style.display = visible ? 'block' : 'none';
   }
 
   public dispose(): void {

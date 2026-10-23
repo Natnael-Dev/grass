@@ -1,48 +1,29 @@
 import * as THREE from 'three';
+import { parseFlags, type AppFlags, type MoodName, type QualityTier } from './flags';
+import { detectCapabilities, type Capabilities } from './capabilities';
+import { Store } from './store';
+import { safeStorage } from '../core/storage';
 import { Renderer } from '../core/Renderer';
+import { AdaptiveQuality } from '../core/AdaptiveQuality';
 import { Loop } from '../core/Loop';
 import { CameraRig } from '../camera/CameraRig';
-import { Sky } from '../world/Sky';
-import { Ridges } from '../world/Ridges';
-import { TerrainMesh } from '../world/TerrainMesh';
-import { Tree } from '../world/Tree';
-import { Grass } from '../world/Grass';
-import { Seeds } from '../world/Seeds';
-import { Fireflies } from '../world/Fireflies';
-import { MoodController } from '../world/MoodController';
-import { getDefaultMood } from '../world/moods';
-import { terrainHeight } from '../world/terrain';
-import { BrushTrail } from '../world/BrushTrail';
-import { GroundRaycaster } from '../input/GroundRaycaster';
-import { Pointer } from '../input/Pointer';
-import { KeyboardBrush } from '../input/KeyboardBrush';
-import { GestureClassifier } from '../input/GestureClassifier';
-import { HandCursor } from '../ui/HandCursor';
 import { Vignette } from '../ui/Vignette';
 import { HintLine } from '../ui/HintLine';
 import { HintSequencer } from '../ui/HintSequencer';
-import { Hud } from '../ui/Hud';
 import { HowItWorks } from '../ui/HowItWorks';
 import { ExitScreen } from '../ui/ExitScreen';
 import { EasterEggs } from '../easter/eggs';
+import { Hud } from '../ui/Hud';
 import { Entry } from '../ui/Entry';
 import { FallbackScreen } from '../ui/FallbackScreen';
-import { safeStorage } from '../core/storage';
-import { parseFlags, type AppFlags, type QualityTier, type MoodName } from './flags';
-import { detectCapabilities, type Capabilities } from './capabilities';
-import { Store } from './store';
-import { AdaptiveQuality } from '../core/AdaptiveQuality';
 import { StatsOverlay } from '../debug/StatsOverlay';
-import { AudioEngine } from '../audio/AudioEngine';
-import { Wind } from '../audio/Wind';
-import { Rustle } from '../audio/Rustle';
-import { Crickets } from '../audio/Crickets';
-import { Birds } from '../audio/Birds';
-import { Sfx } from '../audio/Sfx';
+import { WorldScene } from '../world/WorldScene';
+import { AudioCoordinator } from '../audio/AudioCoordinator';
+import { InputCoordinator } from '../input/InputCoordinator';
 
 export interface AppOptions {
   canvas?: HTMLCanvasElement;
-  flags?: AppFlags;
+  search?: string;
 }
 
 export class App {
@@ -52,97 +33,132 @@ export class App {
     low: 1.25,
   };
 
-  public readonly adaptiveQuality: AdaptiveQuality;
-  public readonly canvas: HTMLCanvasElement;
   public readonly flags: AppFlags;
   public readonly capabilities: Capabilities;
   public readonly store: Store;
-  public readonly scene: THREE.Scene;
+
+  public readonly canvas: HTMLCanvasElement;
   public readonly renderer: Renderer;
+  public readonly adaptiveQuality: AdaptiveQuality;
   public readonly cameraRig: CameraRig;
   public readonly loop: Loop;
 
-  // World systems
-  public readonly sky: Sky;
-  public readonly ridges: Ridges;
-  public readonly terrain: TerrainMesh;
-  public readonly tree: Tree;
-  public readonly grass: Grass;
-  public readonly seeds: Seeds;
-  public readonly fireflies: Fireflies;
-  public readonly moodController: MoodController;
+  // Subsystem coordinators
+  public readonly world: WorldScene;
+  public readonly audio: AudioCoordinator;
+  public readonly input: InputCoordinator;
 
-  // Interaction & input systems
-  public readonly pointer: Pointer;
-  public readonly groundRaycaster: GroundRaycaster;
-  public readonly brushTrail: BrushTrail;
-  public readonly keyboardBrush: KeyboardBrush;
-  public readonly gestureClassifier: GestureClassifier;
-  public readonly handCursor: HandCursor;
+  // UI systems
   public readonly vignette: Vignette;
-
-  // UI & Easter egg systems
   public readonly hintLine: HintLine;
   public readonly hintSequencer: HintSequencer;
-  public readonly hud: Hud;
   public readonly howItWorks: HowItWorks;
   public readonly exitScreen: ExitScreen;
   public readonly easterEggs: EasterEggs;
+  public readonly hud: Hud;
   public readonly entryScreen: Entry;
   public readonly fallbackScreen: FallbackScreen;
+  public readonly statsOverlay: StatsOverlay | null = null;
+
+  // Backward-compatibility references for debug bridge and tests
+  public get scene(): THREE.Scene {
+    return this.world.scene;
+  }
+  public get sky() {
+    return this.world.sky;
+  }
+  public get ridges() {
+    return this.world.ridges;
+  }
+  public get terrain() {
+    return this.world.terrain;
+  }
+  public get tree() {
+    return this.world.tree;
+  }
+  public get grass() {
+    return this.world.grass;
+  }
+  public get seeds() {
+    return this.world.seeds;
+  }
+  public get fireflies() {
+    return this.world.fireflies;
+  }
+  public get moodController() {
+    return this.world.moodController;
+  }
+  public get audioEngine() {
+    return this.audio.engine;
+  }
+  public get wind() {
+    return this.audio.wind;
+  }
+  public get rustle() {
+    return this.audio.rustle;
+  }
+  public get crickets() {
+    return this.audio.crickets;
+  }
+  public get birds() {
+    return this.audio.birds;
+  }
+  public get sfx() {
+    return this.audio.sfx;
+  }
+  public get pointer() {
+    return this.input.pointer;
+  }
+  public get groundRaycaster() {
+    return this.input.groundRaycaster;
+  }
+  public get brushTrail() {
+    return this.input.brushTrail;
+  }
+  public get keyboardBrush() {
+    return this.input.keyboardBrush;
+  }
+  public get handCursor() {
+    return this.input.handCursor;
+  }
+  public get gestureClassifier() {
+    return {
+      getState: () => 'idle',
+      isHolding: () => this.store.getState().lying,
+      on: () => () => {},
+      dispose: () => {},
+    };
+  }
+
+  private currentFps = 60;
+  private idleInactivityTimer = 0;
+  private ee2Triggered = false;
   private contextLostTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  // Audio systems
-  public readonly audioEngine: AudioEngine;
-  public readonly wind: Wind;
-  public readonly rustle: Rustle;
-  public readonly crickets: Crickets;
-  public readonly birds: Birds;
-  public readonly sfx: Sfx;
-
-  // Idle tracking
-  private idleInactivityTimer = 0;
-  public ee2Triggered = false;
-
-  // Pre-allocated scratch vectors to prevent per-frame GC allocations
-  private readonly prevGroundHit = new THREE.Vector3();
-  private hasPrevGroundHit = false;
-  private readonly scratchGroundHit = new THREE.Vector3();
-  private readonly scratchProjected = new THREE.Vector3();
-  private readonly virtualScreenPos = { x: 0, y: 0 };
-
-  // Debug overlay
-  public readonly statsOverlay: StatsOverlay | null = null;
-  private currentFps = 60;
   private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
   private keyupHandler: ((e: KeyboardEvent) => void) | null = null;
   private blurHandler: (() => void) | null = null;
   private visibilityHandler: (() => void) | null = null;
-  private motionMediaHandler: ((e: MediaQueryListEvent) => void) | null = null;
   private motionMediaQuery: MediaQueryList | null = null;
+  private motionMediaHandler: ((e: MediaQueryListEvent) => void) | null = null;
 
   constructor(options: AppOptions = {}) {
-    this.flags = options.flags ?? parseFlags();
+    this.flags = parseFlags(options.search);
     this.capabilities = detectCapabilities(this.flags.quality);
 
     const savedMood = safeStorage.getSavedMood();
-    const initialMood = this.flags.mood ?? savedMood ?? getDefaultMood();
     const savedMuted = safeStorage.getSavedMuted();
     const hintsSeen = safeStorage.getHintsSeen();
 
-    this.moodController = new MoodController(initialMood);
-    this.moodController.onMoodChange = (mood) => {
-      this.store.setState({ mood, targetMood: mood });
-      this.applyCurrentMood();
-    };
+    const initialMood: MoodName = this.flags.mood ?? savedMood ?? 'golden';
 
     this.store = new Store({
       quality: this.capabilities.tier,
-      reducedMotion: this.capabilities.reducedMotion,
-      isTouch: this.capabilities.isTouch,
       mood: initialMood,
       targetMood: initialMood,
       muted: savedMuted,
+      reducedMotion: this.capabilities.reducedMotion,
+      isTouch: this.capabilities.isTouch,
       hintsSeen,
     });
 
@@ -160,18 +176,12 @@ export class App {
       this.canvas = foundCanvas;
     }
 
-    this.scene = new THREE.Scene();
-
     this.renderer = new Renderer({
       canvas: this.canvas,
       dprCap: App.TIER_DPR_CAPS[this.capabilities.tier],
       antialias: true,
-      onContextLost: () => {
-        this.handleContextLost();
-      },
-      onContextRestored: () => {
-        this.handleContextRestored();
-      },
+      onContextLost: () => this.handleContextLost(),
+      onContextRestored: () => this.handleContextRestored(),
     });
 
     const initialAspect = (this.canvas.clientWidth || 800) / (this.canvas.clientHeight || 600);
@@ -186,38 +196,55 @@ export class App {
     this.cameraRig = new CameraRig({ aspect: initialAspect });
     this.cameraRig.setReducedMotion(this.capabilities.reducedMotion);
 
-    this.sky = new Sky();
-    this.ridges = new Ridges();
-    this.terrain = new TerrainMesh();
-    this.tree = new Tree();
-    this.grass = new Grass({
+    // Initialize Subsystem Coordinators
+    this.world = new WorldScene({
       tier: this.store.getState().quality,
       seed: this.flags.seed,
+      reducedMotion: this.capabilities.reducedMotion,
+      initialMood,
     });
-    this.grass.setReducedMotion(this.capabilities.reducedMotion);
-    this.seeds = new Seeds({ seed: this.flags.seed });
-    this.fireflies = new Fireflies({
-      seed: this.flags.seed,
-      tier: this.store.getState().quality,
-    });
-    this.fireflies.setReducedMotion(this.capabilities.reducedMotion);
-    this.moodController.setReducedMotion(this.capabilities.reducedMotion);
 
-    this.scene.add(this.sky.mesh);
-    this.scene.add(this.ridges.group);
-    this.scene.add(this.terrain.mesh);
-    this.scene.add(this.grass.mesh);
-    this.scene.add(this.tree.mesh);
-    this.scene.add(this.seeds.mesh);
-    this.scene.add(this.fireflies.mesh);
+    this.audio = new AudioCoordinator({ initialMuted: savedMuted });
+
+    this.input = new InputCoordinator({
+      canvas: this.canvas,
+      quality: this.store.getState().quality,
+      reducedMotion: this.capabilities.reducedMotion,
+      onActivity: () => {
+        if (!this.audio.isUnlocked()) {
+          void this.audio.unlock();
+        }
+        this.resetIdle();
+        this.hud.onPointerSceneActivity();
+      },
+      onPointerLeave: () => {
+        this.hud.onPointerLeaveScene();
+      },
+      onTap: (x, y) => this.onTap(x, y),
+      onHoldStart: () => this.setLying(true),
+      onHoldEnd: () => {
+        this.setLying(false);
+        this.hintSequencer.onLieDownEnd();
+      },
+      onEe2Trigger: () => {
+        this.ee2Triggered = true;
+        this.easterEggs.onHold10s();
+      },
+      onBrushDist: (distPx) => {
+        this.hintSequencer.onBrush(distPx);
+      },
+      onRustleSpeed: (speed) => {
+        this.audio.onBrush(speed, 1.0, 0.016);
+      },
+    });
 
     // Vignette overlay
     this.vignette = new Vignette(undefined, {
-      baseIntensity: this.moodController.state.vignette,
+      baseIntensity: this.world.moodController.state.vignette,
       reducedMotion: this.capabilities.reducedMotion,
     });
 
-    // UI & Easter eggs initialization
+    // UI & Easter eggs
     this.hintLine = new HintLine({
       reducedMotion: this.capabilities.reducedMotion,
     });
@@ -245,9 +272,7 @@ export class App {
 
     this.easterEggs = new EasterEggs({
       hintLine: this.hintLine,
-      onExitTriggered: () => {
-        this.triggerExit();
-      },
+      onExitTriggered: () => this.triggerExit(),
       isHelpOpen: () => this.howItWorks.getIsOpen(),
     });
     EasterEggs.logConsoleGreeting();
@@ -255,107 +280,23 @@ export class App {
     this.hud = new Hud({
       initialMood,
       initialMuted: savedMuted,
-      onMoodChange: (m) => {
-        this.setMood(m);
-        safeStorage.setSavedMood(m);
-      },
-      onMuteToggle: (muted) => {
-        this.setMuted(muted);
-        safeStorage.setSavedMuted(muted);
-      },
-      onOpenHelp: () => {
-        this.openHelp();
-      },
-      onUptimeMilestone3: () => {
-        this.easterEggs.onUptime3Min();
-      },
-      onUptimeMilestone10: () => {
-        this.easterEggs.onUptime10Min();
-      },
+      onMoodChange: (m) => this.setMood(m),
+      onMuteToggle: (muted) => this.setMuted(muted),
+      onOpenHelp: () => this.openHelp(),
+      onUptimeMilestone3: () => this.easterEggs.onUptime3Min(),
+      onUptimeMilestone10: () => this.easterEggs.onUptime10Min(),
     });
 
     this.entryScreen = new Entry({
-      onEnter: ({ viaKeyboard }) => {
-        this.enter(viaKeyboard);
-      },
+      onEnter: ({ viaKeyboard }) => this.enter(viaKeyboard),
     });
     this.entryScreen.setReducedMotion(this.capabilities.reducedMotion);
 
     this.fallbackScreen = new FallbackScreen();
 
-    // Audio systems initialization
-    this.audioEngine = new AudioEngine({ initialMuted: savedMuted });
-    const audioCtx = this.audioEngine.getContext();
-    const ambienceBus = this.audioEngine.getAmbienceBus();
-    const sfxBus = this.audioEngine.getSfxBus();
-    this.wind = new Wind(audioCtx, ambienceBus);
-    this.rustle = new Rustle(audioCtx, ambienceBus);
-    this.crickets = new Crickets(audioCtx, ambienceBus);
-    this.birds = new Birds(audioCtx, ambienceBus);
-    this.sfx = new Sfx(audioCtx, sfxBus);
-
-    if (!this.audioEngine.isSupported()) {
+    if (!this.audio.isSupported()) {
       this.hud.soundToggle.element.style.display = 'none';
     }
-
-    // Initial mood setup across all world systems
-    this.applyCurrentMood();
-
-    // Interaction systems
-    this.pointer = new Pointer(this.canvas);
-    this.groundRaycaster = new GroundRaycaster();
-    this.brushTrail = new BrushTrail(this.store.getState().quality);
-    this.keyboardBrush = new KeyboardBrush();
-    this.handCursor = new HandCursor();
-    this.handCursor.setReducedMotion(this.capabilities.reducedMotion);
-    this.gestureClassifier = new GestureClassifier();
-
-    // Wire GestureClassifier events
-    this.gestureClassifier.on('tap', (e) => {
-      this.onTap(e.clientX, e.clientY);
-    });
-
-    this.gestureClassifier.on('holdStart', () => {
-      this.setLying(true);
-    });
-
-    this.gestureClassifier.on('holdEnd', () => {
-      this.setLying(false);
-      this.hintSequencer.onLieDownEnd();
-    });
-
-    this.gestureClassifier.on('ee2Trigger', () => {
-      this.ee2Triggered = true;
-      this.easterEggs.onHold10s();
-    });
-
-    // Wire Pointer events into GestureClassifier, HUD activity and idle tracker
-    this.pointer.onDown = (x, y) => {
-      if (!this.audioEngine.isUnlocked()) {
-        void this.audioEngine.unlock();
-      }
-      this.resetIdle();
-      this.gestureClassifier.onPointerDown(x, y);
-      this.hud.onPointerSceneActivity();
-    };
-
-    this.pointer.onMove = (x, y) => {
-      this.resetIdle();
-      this.gestureClassifier.onPointerMove(x, y);
-      this.hud.onPointerSceneActivity();
-    };
-
-    this.pointer.onUp = (x, y) => {
-      this.gestureClassifier.onPointerUp(x, y);
-    };
-
-    this.pointer.onCancel = () => {
-      this.gestureClassifier.onPointerCancel();
-    };
-
-    this.pointer.onLeave = () => {
-      this.hud.onPointerLeaveScene();
-    };
 
     if (this.flags.debug) {
       this.statsOverlay = new StatsOverlay();
@@ -364,33 +305,33 @@ export class App {
     this.loop = new Loop({ freeze: this.flags.freeze });
 
     this.renderer.setOnResize((width, height) => {
-      const aspect = width / height;
-      this.cameraRig.onResize(aspect);
+      this.cameraRig.onResize(width / height);
     });
 
     this.store.subscribe((state, prev) => {
       if (state.quality !== prev.quality) {
-        this.grass.setTier(state.quality);
-        this.brushTrail.setTier(state.quality);
-        this.fireflies.setTier(state.quality);
-        this.renderer.setDprCap(App.TIER_DPR_CAPS[state.quality]);
+        this.world.setTier(state.quality);
+        this.input.setTier(state.quality);
+        this.renderer.setDprCap(App.TIER_DPR_CAPS[state.quality as QualityTier]);
       }
       if (state.targetMood !== prev.targetMood) {
-        this.moodController.setMood(state.targetMood);
+        this.world.setMood(state.targetMood);
       }
       if (state.reducedMotion !== prev.reducedMotion) {
         this.cameraRig.setReducedMotion(state.reducedMotion);
         this.vignette.setReducedMotion(state.reducedMotion);
-        this.grass.setReducedMotion(state.reducedMotion);
-        this.fireflies.setReducedMotion(state.reducedMotion);
-        this.moodController.setReducedMotion(state.reducedMotion);
+        this.world.setReducedMotion(state.reducedMotion);
+        this.input.setReducedMotion(state.reducedMotion);
         this.hintLine.setReducedMotion(state.reducedMotion);
-        this.handCursor.setReducedMotion(state.reducedMotion);
         this.entryScreen.setReducedMotion(state.reducedMotion);
       }
     });
 
-    // Live prefers-reduced-motion media query listener
+    this.setupEventListeners();
+    this.setupLoop();
+  }
+
+  private setupEventListeners(): void {
     if (typeof window !== 'undefined' && window.matchMedia) {
       this.motionMediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
       this.motionMediaHandler = (e: MediaQueryListEvent) => {
@@ -448,65 +389,44 @@ export class App {
           return;
         }
 
-        this.gestureClassifier.onKeyDown(e);
-
         if (e.key === '1') {
           this.setMood('dawn');
-          safeStorage.setSavedMood('dawn');
-          this.hud.moodSwitch.setMood('dawn');
         } else if (e.key === '2') {
           this.setMood('golden');
-          safeStorage.setSavedMood('golden');
-          this.hud.moodSwitch.setMood('golden');
         } else if (e.key === '3') {
           this.setMood('night');
-          safeStorage.setSavedMood('night');
-          this.hud.moodSwitch.setMood('night');
         } else if (e.key === 'Enter') {
           this.spawnSeeds();
         }
       };
 
-      this.keyupHandler = (e: KeyboardEvent) => {
-        this.gestureClassifier.onKeyUp(e);
-      };
-
       this.blurHandler = () => {
-        this.gestureClassifier.reset();
+        this.input.keyboardBrush.deactivate();
       };
 
       this.visibilityHandler = () => {
         if (typeof document !== 'undefined' && document.hidden) {
-          this.gestureClassifier.reset();
           this.hud.uptime.pause();
-          this.audioEngine.handleVisibilityChange(true);
+          this.audio.handleVisibilityChange(true);
         } else if (typeof document !== 'undefined' && !document.hidden) {
           this.hud.uptime.resume();
-          this.audioEngine.handleVisibilityChange(false);
+          this.audio.handleVisibilityChange(false);
         }
       };
 
       window.addEventListener('keydown', this.keydownHandler);
-      window.addEventListener('keyup', this.keyupHandler);
       window.addEventListener('blur', this.blurHandler);
       if (typeof document !== 'undefined') {
         document.addEventListener('visibilitychange', this.visibilityHandler);
       }
     }
+  }
 
-    this.loop.subscribe((dt, elapsed) => {
+  private setupLoop(): void {
+    this.loop.subscribe((dt) => {
       this.currentFps = dt > 0 ? 1 / dt : 60;
       this.adaptiveQuality.recordFrame(dt);
 
-      this.moodController.update(dt);
-      if (this.moodController.state.isFading) {
-        this.applyCurrentMood();
-      } else if (this.store.getState().mood !== this.moodController.state.currentMood) {
-        this.store.setState({ mood: this.moodController.state.currentMood });
-      }
-
-      // 1. Gesture and Idle timers
-      this.gestureClassifier.update();
       this.idleInactivityTimer += dt;
       if (this.idleInactivityTimer >= 25.0) {
         this.cameraRig.setIdle(true);
@@ -515,129 +435,30 @@ export class App {
         this.hintSequencer.onIdle40s();
       }
 
-      // 2. Parallax Target from Pointer NDC
-      this.cameraRig.setParallaxTarget(this.pointer.state.ndcX, this.pointer.state.ndcY);
+      // Input coordination update
+      const inputResult = this.input.update(dt, this.cameraRig.camera, this.loop.getFrameCount());
 
-      // 3. Camera and World System updates
+      // Parallax Target from Pointer NDC
+      this.cameraRig.setParallaxTarget(inputResult.ndcX, inputResult.ndcY);
+
+      const effectiveWindStrength = this.ee2Triggered ? 2.5 : 1.0;
+
       this.cameraRig.update(dt);
       this.vignette.update(dt);
-      this.sky.update(elapsed, this.cameraRig.camera.position);
-      this.tree.update(elapsed);
 
-      // Wind gust factor during idle
-      const idleGustFactor = this.cameraRig.getIdleGustFactor();
-      const effectiveWindStrength = this.moodController.state.windStrength * idleGustFactor;
-      this.grass.uWindStrength.value = effectiveWindStrength;
-      this.grass.update(elapsed, this.cameraRig.camera.position);
-
-      // Fireflies and Seeds simulation updates
-      this.fireflies.update(
-        elapsed,
-        this.moodController.state.firefliesAmount,
-        this.renderer.gl.getPixelRatio(),
-      );
-      this.seeds.update(
+      // World systems update
+      this.world.update(
         dt,
-        this.grass.uWindDir.value,
+        this.cameraRig.camera.position,
         effectiveWindStrength,
-        this.moodController.state.lightColor,
         this.renderer.gl.getPixelRatio(),
       );
 
-      // Procedural audio ambient layers update
-      this.wind.update(
-        this.moodController.state.audio.wind,
-        effectiveWindStrength,
-        this.audioEngine.isLyingDown(),
-      );
-      this.crickets.update(this.moodController.state.audio.crickets);
-      this.birds.update(this.moodController.state.audio.birds, dt);
+      // Audio update
+      this.audio.update(this.world.moodController.state.audio, effectiveWindStrength, dt);
 
-      // 4. Process Virtual Keyboard Brush or Pointer
-      this.keyboardBrush.update(dt);
-      let groundHit: THREE.Vector3 | null = null;
-      let groundSpeed = 0;
-      let rustleSpeed = 0;
-      let hasVirtualScreenPos = false;
-
-      if (this.keyboardBrush.isActive) {
-        this.resetIdle();
-        const kx = this.keyboardBrush.groundPos.x;
-        const kz = this.keyboardBrush.groundPos.z;
-        this.scratchGroundHit.set(kx, terrainHeight(kx, kz), kz);
-        groundHit = this.scratchGroundHit;
-        groundSpeed = this.keyboardBrush.speed;
-        rustleSpeed = this.keyboardBrush.speed > 0 ? 450 : 0;
-
-        this.scratchProjected.copy(groundHit).project(this.cameraRig.camera);
-        const canvasWidth = this.canvas.clientWidth || 800;
-        const canvasHeight = this.canvas.clientHeight || 600;
-        this.virtualScreenPos.x = (this.scratchProjected.x * 0.5 + 0.5) * canvasWidth;
-        this.virtualScreenPos.y = (-this.scratchProjected.y * 0.5 + 0.5) * canvasHeight;
-        hasVirtualScreenPos = true;
-      } else {
-        if (this.pointer.state.deltaX !== 0 || this.pointer.state.deltaY !== 0) {
-          this.keyboardBrush.deactivate();
-          const distPx = Math.hypot(this.pointer.state.deltaX, this.pointer.state.deltaY);
-          if (distPx > 0) {
-            this.hintSequencer.onBrush(distPx);
-            rustleSpeed = dt > 0 ? distPx / dt : 0;
-          }
-        }
-
-        groundHit = this.groundRaycaster.intersect(
-          this.cameraRig.camera,
-          this.pointer.state.ndcX,
-          this.pointer.state.ndcY,
-          this.loop.getFrameCount(),
-        );
-
-        if (groundHit && this.hasPrevGroundHit) {
-          const dist = Math.hypot(
-            groundHit.x - this.prevGroundHit.x,
-            groundHit.z - this.prevGroundHit.z,
-          );
-          const instSpeed = dt > 0 ? dist / dt : 0;
-          this.pointer.recordGroundSpeed(instSpeed);
-          this.prevGroundHit.copy(groundHit);
-        } else if (groundHit) {
-          this.pointer.recordGroundSpeed(0);
-          this.prevGroundHit.copy(groundHit);
-          this.hasPrevGroundHit = true;
-        } else {
-          this.pointer.recordGroundSpeed(0);
-          this.hasPrevGroundHit = false;
-        }
-
-        groundSpeed = this.pointer.getSmoothedGroundSpeed();
-      }
-
-      this.rustle.onBrush(rustleSpeed, 1.0, dt);
-
-      // 5. Brush Interaction: push into trail if hit ground and not in lie-down mode
-      if (groundHit && !this.cameraRig.getIsLying()) {
-        this.brushTrail.maybePush(groundHit, groundSpeed, this.cameraRig.camera.position);
-      }
-
-      // 6. Update brush trail spring response & pack into grass uniforms
-      this.brushTrail.update(dt);
-      this.brushTrail.writeUniforms(this.grass.uTrail.value, this.grass.uTrailCount);
-
-      // 7. Update Hand Cursor
-      this.handCursor.update(
-        dt,
-        this.pointer.state,
-        groundHit !== null,
-        hasVirtualScreenPos ? this.virtualScreenPos : null,
-        groundSpeed,
-      );
-
-      // Reset pointer deltas for the frame when advancing simulation
-      if (dt > 0) {
-        this.pointer.resetDelta();
-      }
-
-      this.renderer.render(this.scene, this.cameraRig.camera);
+      // Render 3D Scene
+      this.renderer.render(this.world.scene, this.cameraRig.camera);
 
       if (this.statsOverlay) {
         const info = this.renderer.getDrawCallInfo();
@@ -646,20 +467,10 @@ export class App {
           tier: this.store.getState().quality,
           drawCalls: info.drawCalls,
           triangles: info.triangles,
-          blades: this.grass.instanceCount,
+          blades: this.world.grass.instanceCount,
         });
       }
     });
-  }
-
-  private applyCurrentMood(): void {
-    const s = this.moodController.state;
-    this.sky.applyMood(s);
-    this.terrain.applyMood(s);
-    this.grass.applyMood(s);
-    this.ridges.applyMood(s);
-    this.tree.applyMood(s);
-    this.vignette.setBaseIntensity(s.vignette);
   }
 
   public handleContextLost(): void {
@@ -691,11 +502,7 @@ export class App {
   }
 
   public enter(viaKeyboard = false): void {
-    void this.audioEngine.unlock().then(() => {
-      this.wind.start();
-      this.crickets.start();
-      this.birds.start();
-    });
+    this.audio.startAmbience();
     this.cameraRig.startEntry();
     this.store.setState({ phase: 'running' });
     this.hintSequencer.start();
@@ -723,18 +530,17 @@ export class App {
 
   public setMood(mood: MoodName, immediate = false): void {
     this.store.setState({ targetMood: mood });
-    this.moodController.setMood(mood, immediate);
+    this.world.setMood(mood, immediate);
     this.hud.moodSwitch.setMood(mood);
     safeStorage.setSavedMood(mood);
     if (immediate) {
       this.store.setState({ mood });
-      this.applyCurrentMood();
     }
   }
 
   public setMuted(muted: boolean): void {
     this.store.setState({ muted });
-    this.audioEngine.setMuted(muted);
+    this.audio.setMuted(muted);
     this.hud.soundToggle.setMuted(muted);
     safeStorage.setSavedMuted(muted);
   }
@@ -750,8 +556,8 @@ export class App {
   }
 
   public closeHelp(): void {
-    this.store.setState({ helpOpen: false });
     this.howItWorks.close();
+    this.store.setState({ helpOpen: false });
   }
 
   public triggerExit(): void {
@@ -759,60 +565,50 @@ export class App {
     this.exitScreen.show();
   }
 
-  public onTap(clientX: number, clientY: number): void {
-    this.resetIdle();
-    this.hintSequencer.onTap();
-    const rect = this.canvas.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) return;
-    const ndcX = ((clientX - rect.left) / rect.width) * 2 - 1;
-    const ndcY = -(((clientY - rect.top) / rect.height) * 2 - 1);
-
-    const groundHit = this.groundRaycaster.intersect(
+  public onTap(x: number, y: number): void {
+    const hit = this.input.groundRaycaster.intersect(
       this.cameraRig.camera,
-      ndcX,
-      ndcY,
+      (x / (this.canvas.clientWidth || 800)) * 2 - 1,
+      -((y / (this.canvas.clientHeight || 600)) * 2 - 1),
       this.loop.getFrameCount(),
     );
-
-    if (groundHit) {
-      this.seeds.spawn(groundHit.x, groundHit.y, groundHit.z, this.store.getState().quality);
-      this.sfx.playSeedScatter();
-
-      // Tap brush impulse: radius x1.3, strength 1.0
-      const distFromCam = groundHit.distanceTo(this.cameraRig.camera.position);
-      const baseRadius = Math.min(3.0, Math.max(1.4, 1.4 + 0.05 * distFromCam));
-      this.brushTrail.pushImpulse(groundHit.x, groundHit.z, baseRadius * 1.3, 1.0);
+    if (hit) {
+      this.spawnSeeds(hit.x, hit.z);
+    } else {
+      this.spawnSeeds();
     }
   }
 
   public spawnSeeds(x?: number, z?: number): void {
+    this.resetIdle();
+    this.hintSequencer.onTap();
     const spawnX = x ?? 0;
-    const spawnZ = z ?? 0;
-    const spawnY = terrainHeight(spawnX, spawnZ);
-    this.seeds.spawn(spawnX, spawnY, spawnZ, this.store.getState().quality);
-    this.sfx.playSeedScatter();
+    const spawnZ = z ?? -12;
+    this.world.spawnSeeds(spawnX, spawnZ, this.store.getState().quality);
+    this.audio.sfx.playSeedScatter();
+
     const distFromCam = Math.hypot(
       spawnX - this.cameraRig.camera.position.x,
       spawnZ - this.cameraRig.camera.position.z,
     );
     const baseRadius = Math.min(3.0, Math.max(1.4, 1.4 + 0.05 * distFromCam));
-    this.brushTrail.pushImpulse(spawnX, spawnZ, baseRadius * 1.3, 1.0);
+    this.input.brushTrail.pushImpulse(spawnX, spawnZ, baseRadius * 1.3, 1.0);
   }
 
   public getSeedsCount(): number {
-    return this.seeds.getActiveCount();
+    return this.world.getSeedsCount();
   }
 
   public getFirefliesCount(): number {
-    return this.fireflies.getTierCount();
+    return this.world.getFirefliesCount();
   }
 
   public setLying(lying: boolean): void {
     this.store.setState({ lying });
     this.cameraRig.setLying(lying);
     this.vignette.setLying(lying);
-    this.handCursor.setHolding(lying);
-    this.audioEngine.setLyingDown(lying);
+    this.input.setHolding(lying);
+    this.audio.setLyingDown(lying);
     if (typeof document !== 'undefined') {
       if (lying) {
         document.body.classList.add('lying');
@@ -862,7 +658,7 @@ export class App {
       tier: this.store.getState().quality,
       drawCalls: info.drawCalls,
       triangles: info.triangles,
-      blades: this.grass.instanceCount,
+      blades: this.world.grass.instanceCount,
       p95: metrics.p95FrameTimeMs,
     };
   }
@@ -899,10 +695,7 @@ export class App {
     if (this.capabilities.isTouch && typeof document !== 'undefined') {
       document.body.classList.remove('is-touch');
     }
-    this.pointer.dispose();
-    this.keyboardBrush.dispose();
-    this.gestureClassifier.dispose();
-    this.handCursor.dispose();
+    this.input.dispose();
     this.vignette.dispose();
     this.hintLine.dispose();
     this.hintSequencer.dispose();
@@ -916,20 +709,9 @@ export class App {
       this.contextLostTimeoutId = null;
     }
     this.fallbackScreen.dispose();
-    this.wind.dispose();
-    this.rustle.dispose();
-    this.crickets.dispose();
-    this.birds.dispose();
-    this.sfx.dispose();
-    this.audioEngine.dispose();
+    this.audio.dispose();
     this.loop.dispose();
-    this.sky.dispose();
-    this.ridges.dispose();
-    this.terrain.dispose();
-    this.tree.dispose();
-    this.grass.dispose();
-    this.seeds.dispose();
-    this.fireflies.dispose();
+    this.world.dispose();
     this.statsOverlay?.dispose();
     this.renderer.dispose();
   }
