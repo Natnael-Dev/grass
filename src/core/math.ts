@@ -41,22 +41,3 @@ export function smoothstep(min: number, max: number, value: number): number {
   const x = clamp((value - min) / (max - min), 0, 1);
   return x * x * (3 - 2 * x);
 }
-
-/**
- * Smootherstep interpolation with 5th order Hermite curve.
- */
-export function smootherstep(min: number, max: number, value: number): number {
-  if (min === max) {
-    return value < min ? 0 : 1;
-  }
-  const x = clamp((value - min) / (max - min), 0, 1);
-  return x * x * x * (x * (x * 6 - 15) + 10);
-}
-
-/**
- * Inverse linear interpolation: returns t given a value in [a, b].
- */
-export function invLerp(a: number, b: number, val: number): number {
-  if (a === b) return 0;
-  return clamp((val - a) / (b - a), 0, 1);
-}

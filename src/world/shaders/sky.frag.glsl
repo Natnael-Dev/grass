@@ -10,7 +10,6 @@ uniform float uHalo;
 uniform vec3 uCloudColor;
 uniform float uCloudCover;
 uniform float uStarsAmount;
-uniform vec3 uFogColor;
 uniform float uTime;
 
 varying vec3 vWorldDir;

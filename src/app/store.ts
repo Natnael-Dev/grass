@@ -1,6 +1,6 @@
 import type { MoodName, QualityTier } from './flags';
 
-export type AppPhase = 'init' | 'ready' | 'running' | 'paused' | 'exit' | 'exited';
+export type AppPhase = 'init' | 'ready' | 'running' | 'exited';
 
 export interface AppState {
   phase: AppPhase;
@@ -13,7 +13,6 @@ export interface AppState {
   reducedMotion: boolean;
   isTouch: boolean;
   helpOpen: boolean;
-  uptimeSeconds: number;
 }
 
 export type StoreListener = (state: Readonly<AppState>, prev: Readonly<AppState>) => void;
@@ -34,7 +33,6 @@ export class Store {
       reducedMotion: false,
       isTouch: false,
       helpOpen: false,
-      uptimeSeconds: 0,
       ...initialState,
     };
   }

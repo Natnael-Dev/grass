@@ -1,6 +1,6 @@
 attribute vec3 offset;
 attribute vec4 params;
-attribute vec2 rand;
+attribute float rand;
 
 uniform float uTime;
 uniform float uWindStrength;
@@ -61,7 +61,7 @@ void main() {
   vec3 world = root + local;
   vWorld = world;
   vH = t;
-  vRand = rand.x;
+  vRand = rand;
 
   // 6. Blend blade normal 60% toward terrain up for soft painterly shading
   vec3 bladeNormal = vec3(-sinY, 0.0, cosY);

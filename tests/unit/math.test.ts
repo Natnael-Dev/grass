@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clamp, lerp, damp, smoothstep, smootherstep, invLerp } from '../../src/core/math';
+import { clamp, lerp, damp, smoothstep } from '../../src/core/math';
 
 describe('math utilities', () => {
   describe('clamp', () => {
@@ -62,28 +62,6 @@ describe('math utilities', () => {
       expect(smoothstep(5, 5, 4)).toBe(0);
       expect(smoothstep(5, 5, 5)).toBe(1);
       expect(smoothstep(5, 5, 6)).toBe(1);
-    });
-  });
-
-  describe('smootherstep', () => {
-    it('returns 0 at min and 1 at max', () => {
-      expect(smootherstep(0, 1, 0)).toBe(0);
-      expect(smootherstep(0, 1, 1)).toBe(1);
-      expect(smootherstep(0, 1, 0.5)).toBe(0.5);
-    });
-  });
-
-  describe('invLerp', () => {
-    it('calculates the normalized ratio', () => {
-      expect(invLerp(0, 100, 50)).toBe(0.5);
-      expect(invLerp(10, 20, 10)).toBe(0);
-      expect(invLerp(10, 20, 20)).toBe(1);
-      expect(invLerp(10, 20, 5)).toBe(0);
-      expect(invLerp(10, 20, 25)).toBe(1);
-    });
-
-    it('returns 0 when a == b', () => {
-      expect(invLerp(10, 10, 10)).toBe(0);
     });
   });
 });

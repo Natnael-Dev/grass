@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
-import { spawn } from 'child_process';
 import { pathToFileURL } from 'url';
+import { preview } from 'vite';
 
 const root = process.cwd();
 const playwrightPath = pathToFileURL(path.join(root, 'node_modules', 'playwright', 'index.mjs')).href;
@@ -13,18 +13,18 @@ if (!fs.existsSync(targetDir)) {
 }
 
 async function capture() {
-  const port = 4188;
-  console.log(`Starting preview server for capture to ${targetDir} on port ${port}...`);
-  const server = spawn('npx', ['vite', 'preview', '--port', String(port), '--strictPort'], {
-    shell: true,
-    cwd: root,
-    stdio: 'pipe'
+  console.log(`Starting in-process preview server for capture to ${targetDir}...`);
+  const server = await preview({
+    root,
+    preview: {
+      port: 0,
+      strictPort: false
+    }
   });
 
-  server.stdout.on('data', data => console.log(`[preview] ${data}`));
-  server.stderr.on('data', data => console.error(`[preview err] ${data}`));
-
-  await new Promise(r => setTimeout(r, 3000));
+  const address = server.httpServer.address();
+  const port = typeof address === 'object' && address ? address.port : 4173;
+  console.log(`Preview server listening on ephemeral port ${port}`);
 
   console.log('Launching browser...');
   const browser = await chromium.launch({ headless: true });
@@ -107,7 +107,7 @@ async function capture() {
   console.log(`Saved measurements: ${path.join(targetDir, 'measurements.json')}`);
 
   await browser.close();
-  server.kill();
+  server.httpServer.close();
   console.log('Capture complete!');
 }
 

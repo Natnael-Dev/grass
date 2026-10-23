@@ -69,7 +69,7 @@ export class Grass {
 
     const offsetAttr = new THREE.InstancedBufferAttribute(this.instanceData.offset, 3);
     const paramsAttr = new THREE.InstancedBufferAttribute(this.instanceData.params, 4);
-    const randAttr = new THREE.InstancedBufferAttribute(this.instanceData.rand, 2);
+    const randAttr = new THREE.InstancedBufferAttribute(this.instanceData.rand, 1);
 
     // Pre-create instanced LOD geometries sharing instance buffers
     const baseGeomHigh = createBladeGeometry(4);

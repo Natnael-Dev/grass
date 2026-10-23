@@ -14,7 +14,7 @@ export function parseFlags(
 ): AppFlags {
   const params = new URLSearchParams(search);
 
-  const rawQuality = params.get('quality');
+  const rawQuality = params.get('quality') || params.get('tier');
   const quality =
     rawQuality === 'high' || rawQuality === 'medium' || rawQuality === 'low' ? rawQuality : null;
 

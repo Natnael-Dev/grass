@@ -5,7 +5,7 @@ export interface GrassInstanceData {
   count: number;
   offset: Float32Array; // (x, y, z) per instance
   params: Float32Array; // (height, width, yaw, bend) per instance
-  rand: Float32Array; // (r1, r2) per instance
+  rand: Float32Array; // random float per instance
 }
 
 export interface GrassGeneratorOptions {
@@ -44,7 +44,7 @@ export function generateGrassInstances(options: GrassGeneratorOptions = {}): Gra
 
   const offset = new Float32Array(total * 3);
   const params = new Float32Array(total * 4);
-  const rand = new Float32Array(total * 2);
+  const rand = new Float32Array(total);
 
   let nearCount = 0;
   let midCount = 0;
@@ -99,8 +99,7 @@ export function generateGrassInstances(options: GrassGeneratorOptions = {}): Gra
       params[idx * 4 + 3] = bend;
 
       // Rand (r1, r2)
-      rand[idx * 2] = prng.random();
-      rand[idx * 2 + 1] = prng.random();
+      rand[idx] = prng.random();
 
       totalGenerated++;
     }
@@ -135,13 +134,10 @@ export function generateGrassInstances(options: GrassGeneratorOptions = {}): Gra
     params[j * 4 + 2] = pY;
     params[j * 4 + 3] = pB;
 
-    // Swap rand (2 floats)
-    const r1 = rand[i * 2]!;
-    const r2 = rand[i * 2 + 1]!;
-    rand[i * 2] = rand[j * 2]!;
-    rand[i * 2 + 1] = rand[j * 2 + 1]!;
-    rand[j * 2] = r1;
-    rand[j * 2 + 1] = r2;
+    // Swap rand (1 float)
+    const r = rand[i]!;
+    rand[i] = rand[j]!;
+    rand[j] = r;
   }
 
   return {

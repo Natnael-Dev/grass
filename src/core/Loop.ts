@@ -8,7 +8,6 @@ export type TickCallback = (dt: number, elapsed: number) => void;
 
 export interface LoopOptions {
   freeze?: boolean;
-  fixedDt?: number;
 }
 
 export class Loop {
@@ -19,12 +18,10 @@ export class Loop {
   private subscribers: TickCallback[] = [];
   private readonly maxDt = 0.1; // 100ms clamp
   private isFrozen: boolean;
-  private fixedDt: number;
   private framesCount = 0;
 
   constructor(options: LoopOptions = {}) {
     this.isFrozen = options.freeze ?? false;
-    this.fixedDt = options.fixedDt ?? 1 / 60;
 
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', this.handleVisibilityChange);

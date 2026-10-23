@@ -67,7 +67,7 @@ describe('HintSequencer', () => {
 
   beforeEach(() => {
     vi.useFakeTimers();
-    safeStorage.clear();
+    safeStorage.setHintsSeen(false);
     mockHintLine = {
       show: vi.fn(),
       fadeOut: vi.fn(),

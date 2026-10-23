@@ -54,32 +54,6 @@ export class SafeStorage {
     return true;
   }
 
-  public removeItem(key: string): boolean {
-    this.memoryFallback.delete(key);
-    if (this.storageAvailable && this.storage) {
-      try {
-        this.storage.removeItem(key);
-        return true;
-      } catch {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  public clear(): void {
-    this.memoryFallback.clear();
-    if (this.storageAvailable && this.storage) {
-      try {
-        this.storage.removeItem(STORAGE_KEYS.MOOD);
-        this.storage.removeItem(STORAGE_KEYS.MUTED);
-        this.storage.removeItem(STORAGE_KEYS.HINTS_SEEN);
-      } catch {
-        // Ignore
-      }
-    }
-  }
-
   // App-specific helpers
   public getSavedMood(): MoodName | null {
     const val = this.getItem(STORAGE_KEYS.MOOD);

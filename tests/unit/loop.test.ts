@@ -53,7 +53,7 @@ describe('render and animation Loop', () => {
   });
 
   it('supports frozen deterministic time stepping', () => {
-    const loop = new Loop({ freeze: true, fixedDt: 0.02 });
+    const loop = new Loop({ freeze: true });
     expect(loop.getFrameCount()).toBe(0);
 
     const received: number[] = [];

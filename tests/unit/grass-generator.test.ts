@@ -8,7 +8,7 @@ describe('generateGrassInstances', () => {
     expect(data.count).toBe(1000);
     expect(data.offset.length).toBe(1000 * 3);
     expect(data.params.length).toBe(1000 * 4);
-    expect(data.rand.length).toBe(1000 * 2);
+    expect(data.rand.length).toBe(1000);
   });
 
   it('is deterministic for identical seeds', () => {

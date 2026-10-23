@@ -47,8 +47,8 @@ describe('SafeStorage', () => {
     storage.setItem('test', 'value123');
     expect(storage.getItem('test')).toBe('value123');
     expect(mock.getItem('test')).toBe('value123');
-    storage.removeItem('test');
-    expect(storage.getItem('test')).toBeNull();
+    storage.setItem('test', 'value456');
+    expect(storage.getItem('test')).toBe('value456');
   });
 
   it('falls back to in-memory store when storage is null', () => {
@@ -56,8 +56,8 @@ describe('SafeStorage', () => {
     expect(storage.getItem('foo')).toBeNull();
     storage.setItem('foo', 'bar');
     expect(storage.getItem('foo')).toBe('bar');
-    storage.removeItem('foo');
-    expect(storage.getItem('foo')).toBeNull();
+    storage.setItem('foo', 'baz');
+    expect(storage.getItem('foo')).toBe('baz');
   });
 
   it('falls back gracefully when storage throws on access', () => {
@@ -86,10 +86,5 @@ describe('SafeStorage', () => {
     storage.setHintsSeen(true);
     expect(storage.getHintsSeen()).toBe(true);
     expect(mock.getItem(STORAGE_KEYS.HINTS_SEEN)).toBe('1');
-
-    storage.clear();
-    expect(storage.getSavedMood()).toBeNull();
-    expect(storage.getSavedMuted()).toBe(false);
-    expect(storage.getHintsSeen()).toBe(false);
   });
 });

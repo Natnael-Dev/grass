@@ -19,7 +19,6 @@ export class Sky {
   public readonly uCloudColor = { value: new THREE.Color('#fff0d8') };
   public readonly uCloudCover = { value: 0.4 };
   public readonly uStarsAmount = { value: 0.0 };
-  public readonly uFogColor = { value: new THREE.Color('#f3cf9f') };
   public readonly uTime = { value: 0.0 };
 
   constructor() {
@@ -42,7 +41,6 @@ export class Sky {
         uCloudColor: this.uCloudColor,
         uCloudCover: this.uCloudCover,
         uStarsAmount: this.uStarsAmount,
-        uFogColor: this.uFogColor,
         uTime: this.uTime,
       },
     });
@@ -86,7 +84,6 @@ export class Sky {
     this.uCloudColor.value.copy(mood.cloudColor);
     this.uCloudCover.value = mood.cloudCover;
     this.uStarsAmount.value = mood.starsAmount;
-    this.uFogColor.value.copy(mood.fogColor);
   }
 
   public dispose(): void {
