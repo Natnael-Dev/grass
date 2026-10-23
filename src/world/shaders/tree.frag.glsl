@@ -22,11 +22,10 @@ void main() {
   vec3 normal = normalize(vNormal);
   vec3 lightDir = normalize(uSunDir);
 
-  // Soft wrap diffuse for stylized painterly shading
-  float nDotL = dot(normal, lightDir);
-  float wrap = max(0.0, nDotL * 0.6 + 0.4);
-  vec3 direct = uLightColor * (uLightIntensity * wrap);
-  vec3 ambient = uAmbientColor * uAmbientIntensity;
+  // Directional diffuse and calibrated ambient for foliage shadow depth
+  float nDotL = max(0.0, dot(normal, lightDir));
+  vec3 direct = uLightColor * (uLightIntensity * nDotL);
+  vec3 ambient = uAmbientColor * (uAmbientIntensity * 0.4);
   vec3 lit = vColor * (direct + ambient);
 
   // Gentle rim light for silhouette readability

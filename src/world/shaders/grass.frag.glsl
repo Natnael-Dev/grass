@@ -78,8 +78,8 @@ void main() {
   float bladeJitter = mix(0.92, 1.08, vRand);
   vec3 albedo = baseColor * meadowPatch * bladeJitter;
 
-  // 4. Root ambient occlusion (darkens blade root to 55%)
-  float rootAO = mix(0.55, 1.0, smoothstep(0.0, 0.5, vH));
+  // 4. Root ambient occlusion (anchors blades to the terrain)
+  float rootAO = mix(0.15, 1.0, smoothstep(0.0, 0.5, vH));
   albedo *= rootAO;
 
   // 5. Lighting vectors
@@ -87,10 +87,10 @@ void main() {
   vec3 L = normalize(uSunDir);
   vec3 V = normalize(cameraPosition - vWorld);
 
-  // Soft wrap diffuse
-  float wrapDiffuse = max(0.0, dot(N, L) * 0.5 + 0.5);
-  vec3 direct = uLightColor * (uLightIntensity * wrapDiffuse);
-  vec3 ambient = uAmbientColor * uAmbientIntensity;
+  // Directional diffuse and calibrated ambient for crisp shadow depth
+  float diffuse = max(0.0, dot(N, L));
+  vec3 direct = uLightColor * (uLightIntensity * diffuse);
+  vec3 ambient = uAmbientColor * (uAmbientIntensity * 0.4);
 
   // 6. Back-light translucency toward sun
   float backDot = max(0.0, dot(V, -L));

@@ -23,12 +23,10 @@ void main() {
   vec3 normal = normalize(vNormal);
   vec3 lightDir = normalize(uSunDir);
 
-  // Soft half-lambert diffuse for painterly stylized terrain
+  // Directional diffuse and calibrated ambient for distinct terrain hill shadows
   float nDotL = max(0.0, dot(normal, lightDir));
-  float halfLambert = pow(nDotL * 0.5 + 0.5, 2.0);
-
-  vec3 direct = uLightColor * (uLightIntensity * halfLambert);
-  vec3 ambient = uAmbientColor * uAmbientIntensity;
+  vec3 direct = uLightColor * (uLightIntensity * nDotL);
+  vec3 ambient = uAmbientColor * (uAmbientIntensity * 0.4);
   vec3 litColor = uTerrainColor * (direct + ambient);
 
   // Fog blending with distance from camera
