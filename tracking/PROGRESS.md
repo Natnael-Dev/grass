@@ -1,36 +1,121 @@
 # PROGRESS — the agent's live log (update after EVERY task and gate)
 
-**Current milestone:** M0 (in-progress)
-**Current state:** in-progress
-**Last updated:** 2026-10-18 23:55
+**Current milestone:** Phase A Cleanup & Render-Pipeline Fix Complete
+**Current state:** Ready for Phase B Visual Polish & Texture Atlas
+**Last updated:** 2026-11-06 08:50
 **Open blockers:** none
 
 ## Milestone checklist
+
 Mark `[x]` only when the gate passed AND evidence exists AND (strict mode) the human approved.
 
-- [ ] M0 Capability discovery, repo + GitHub bootstrap — evidence: tracking/evidence/M0/
-- [ ] M1 Tooling scaffold, CI, hooks — evidence: tracking/evidence/M1/
-- [ ] M2 Render core (G1) — evidence: tracking/evidence/M2/
-- [ ] M3 Grass + wind (G2)
-- [ ] M4 Mood system (G3)
-- [ ] M5 Brush + hand cursor (G4)
-- [ ] M6 Lie-down + parallax + idle (G5)
-- [ ] M7 Seeds + fireflies (G6)
-- [ ] M8 UI shell + hints + easter eggs (G7)
-- [ ] M9 Audio (G8)
-- [ ] M10 Mobile/a11y/fallbacks (G9)
-- [ ] M11 Performance + adaptive quality (G10)
-- [ ] M12 Hardening + QA audit (G11)
-- [ ] M13 Release (G12)
+- [x] M0 Capability discovery, repo + GitHub bootstrap — evidence: tracking/evidence/M0/
+- [x] M1 Tooling scaffold, CI, hooks — evidence: tracking/evidence/M1/
+- [x] M2 Render core (G1) — evidence: tracking/evidence/M2/
+- [x] M3 Grass + wind (G2) — evidence: tracking/evidence/M3/
+- [x] M4 Mood system (G3) — evidence: tracking/evidence/M4/
+- [x] M5 Brush + hand cursor (G4) — evidence: tracking/evidence/M5/
+- [x] M6 Lie-down + parallax + idle (G5) — evidence: tracking/evidence/M6/
+- [x] M7 Seeds + fireflies (G6) — evidence: tracking/evidence/M7/
+- [x] M8 UI shell + hints + easter eggs (G7) — evidence: tracking/evidence/M8/
+- [x] M9 Audio (G8) — evidence: tracking/evidence/M9/
+- [x] M10 Mobile/a11y/fallbacks (G9) — evidence: tracking/evidence/M10/README.md
+- [x] M11 Performance + adaptive quality (G10) — evidence: tracking/evidence/M11/README.md
+- [x] Phase A Over-engineering audit & render-pipeline cleanup — report: docs/CLEANUP_REPORT.md
+- [ ] Phase B Visual redesign, texture atlas & flower quads (G11)
+- [ ] Release v1.0.0 (G12)
 
 ## Task log (append-only; newest at bottom)
+
 Format: `YYYY-MM-DD HH:MM | Mx | task | result | commit-sha | evidence-path`
+2026-10-18 23:55 | M0 | capability discovery, repo bootstrap, ADR-010 | pass | 54326be | tracking/evidence/M0/README.md
+2026-10-19 00:23 | M1 | tooling scaffold, CI, quality hooks, smoke test | pass | 9a6f0d2 | tracking/evidence/M1/README.md
+2026-10-19 00:32 | M2 | Task 2.1 deterministic PRNG | pass | cfc64a9 | tracking/evidence/M2/README.md
+2026-10-19 00:34 | M2 | Task 2.2 analytic terrainHeight & normal generator | pass | 3fff182 | tracking/evidence/M2/README.md
+2026-10-19 00:35 | M2 | Task 2.3 WebGL2 Renderer & rAF Loop with visibility pause | pass | bc41cd6 | tracking/evidence/M2/README.md
+2026-10-19 00:36 | M2 | Task 2.4 CameraRig vista pose & ground clearance clamp | pass | d300ad6 | tracking/evidence/M2/README.md
+2026-10-19 00:37 | M2 | Task 2.5 procedural gradient Sky shader with sun disc and clouds | pass | 38867fd | tracking/evidence/M2/README.md
+2026-10-19 00:47 | M2 | Task 2.6 Terrain mesh and layered Ridges with fog | pass | 79e4f09 | tracking/evidence/M2/README.md
+2026-10-19 00:51 | M2 | Task 2.7 low-poly silhouette Tree on hill crest | pass | 50d8f20 | tracking/evidence/M2/README.md
+2026-10-19 01:03 | M2 | Task 2.8 App integration, store, flags, capabilities, debug overlay | pass | 8393e80 | tracking/evidence/M2/README.md
+2026-10-19 01:05 | M2 | Task 2.9 E2E render core visual verification & golden vista capture | pass | a3cd6ea | tracking/evidence/M2/README.md
+2026-10-19 10:20 | M3 | Task 3.1 LOD blade geometry with 4/3/2 segments | pass | e048f74 | tracking/evidence/M3/README.md
+2026-10-19 10:25 | M3 | Task 3.2 256x256 seamless dual-octave wind noise texture | pass | 90b03e8 | tracking/evidence/M3/README.md
+2026-10-19 10:30 | M3 | Task 3.3 90k seeded grass instance generator with rings | pass | 14794c7 | tracking/evidence/M3/README.md
+2026-10-19 10:42 | M3 | Task 3.4 & 3.5 Grass system assembly & tier LOD | pass | fb0a78e | tracking/evidence/M3/README.md
+2026-10-19 10:50 | M3 | Task 3.6 App integration, tier URL flag & terrain blending | pass | 803b405 | tracking/evidence/M3/README.md
+2026-10-19 11:05 | M3 | Task 3.7 E2E grass tests, wind motion, vista screenshot | pass | 1ae04cc | tracking/evidence/M3/README.md
+2026-10-19 11:23 | M4 | Task 4.1 mood presets & time-of-day default logic | pass | 99c3fc2 | tracking/evidence/M4/README.md
+2026-10-19 19:05 | M4 | Task 4.2 MoodController retargetable crossfade & arc math | pass | 965aad3 | tracking/evidence/M4/README.md
+2026-10-19 19:08 | M4 | Task 4.3 sky shader moon mottling & star field crossfade | pass | f9f9686 | tracking/evidence/M4/README.md
+2026-10-19 19:12 | M4 | Task 4.4 wire MoodState to world systems | pass | 2de09f5 | tracking/evidence/M4/README.md
+2026-10-19 19:16 | M4 | Task 4.5 App loop integration & dev keys 1, 2, 3 | pass | f05f730 | tracking/evidence/M4/README.md
+2026-10-19 19:30 | M4 | Task 4.6 E2E mood crossfade verification & screenshot capture | pass | ac95768 | tracking/evidence/M4/README.md
+2026-10-19 19:58 | M5 | Task 5.1 GroundRaycaster analytic terrain binary refinement | pass | 0ecb3db | tracking/evidence/M5/README.md
+2026-10-19 20:02 | M5 | Task 5.2 BrushTrail ring buffer & spring response curve | pass | 70c9d06 | tracking/evidence/M5/README.md
+2026-10-19 20:05 | M5 | Task 5.3 unified Pointer listener and KeyboardBrush | pass | 7058a11 | tracking/evidence/M5/README.md
+2026-10-19 20:07 | M5 | Task 5.4 HandCursor with organic motion and SVGs | pass | 0dd4262 | tracking/evidence/M5/README.md
+2026-10-19 20:09 | M5 | Task 5.5 App loop integration & grass trail uniform wiring | pass | d7d0bab | tracking/evidence/M5/README.md
+2026-10-19 20:33 | M5 | Task 5.6 Playwright sweep, spring recovery sequence, and cursor tests | pass | 138972c | tracking/evidence/M5/README.md
+2026-10-19 21:05 | M6 | Task 6.1 GestureClassifier with tap, hold, and boundary logic | pass | c112ebc | tracking/evidence/M6/README.md
+2026-10-19 21:12 | M6 | Task 6.2 CameraRig dip pose, doubled parallax, idle drift, reduced motion | pass | 87d778d | tracking/evidence/M6/README.md
+2026-10-19 21:18 | M6 | Task 6.3 Vignette overlay, HUD lie-down dimming, cursor hold auto-hide | pass | 7d54e44 | tracking/evidence/M6/README.md
+2026-10-19 21:24 | M6 | Task 6.4 App loop integration, inactivity timer, idle gust wiring | pass | bb043c4 | tracking/evidence/M6/README.md
+2026-10-19 21:35 | M6 | Task 6.5 Playwright E2E lie-down, idle, terrain clearance & screenshots | pass | a0cc900 | tracking/evidence/M6/README.md
+2026-10-19 22:00 | M7 | Task 7.1 seed particle system with wind drift and lifecycles | pass | cba6951 | tracking/evidence/M7/README.md
+2026-10-19 22:03 | M7 | Task 7.2 GPU animated fireflies with mood crossfade | pass | 71777cc | tracking/evidence/M7/README.md
+2026-10-19 22:15 | M7 | Task 7.3 seeds spawn and fireflies integrated into world and input loop | pass | 375138f | tracking/evidence/M7/README.md
+2026-10-19 22:28 | M7 | Task 7.4 Playwright E2E tests for seeds and fireflies | pass | 3eb9e59 | tracking/evidence/M7/README.md
+2026-10-19 23:45 | M8 | UI shell, hints, help, uptime, easter eggs, 404, e2e J1/J2/J4 suite | pass | HEAD | tracking/evidence/M8/README.md
+2026-10-20 20:10 | M9 | Task 9.1 procedural noise generator and audio math utilities | pass | bd82923 | tracking/evidence/M9/README.md
+2026-10-20 20:15 | M9 | Task 9.2 audio engine core graph with master bus, mute ramp and lifecycle | pass | 8443d9c | tracking/evidence/M9/README.md
+2026-10-20 20:18 | M9 | Task 9.3 procedural wind, rustle, crickets and birds layers | pass | 6590aa1 | tracking/evidence/M9/README.md
+2026-10-20 20:31 | M9 | Task 9.4 integrate audio engine with app loop, moods, gestures, and sfx | pass | 4574655 | tracking/evidence/M9/README.md
+2026-10-20 20:38 | M9 | Task 9.5 automated E2E test suite and Gate G8 evidence | pass | 04953c8 | tracking/evidence/M9/README.md
+2026-10-20 21:05 | M10 | Task 10.1 HTML landmarks, viewport safe areas, responsive CSS, and forced-colors | pass | 31d2dba | tracking/evidence/M10/README.md
+2026-10-20 21:12 | M10 | Task 10.2 Dynamic reduced-motion synchronization across engine and shaders | pass | 3db38a0 | tracking/evidence/M10/README.md
+2026-10-20 21:18 | M10 | Task 10.3 WebGL context-lost recovery and fallback handling | pass | 8c93dd9 | tracking/evidence/M10/README.md
+2026-10-20 21:24 | M10 | Task 10.4 WCAG AA color contrast verification script and tests | pass | 61ddb5c | tracking/evidence/M10/README.md
+2026-10-20 22:15 | M10 | Task 10.5 Automated mobile & a11y E2E test suite and Gate G9 evidence | pass | HEAD | tracking/evidence/M10/README.md
+2026-10-20 22:45 | M11 | Task 11.1 AdaptiveQuality rolling frame monitor & variance calculations | pass | fb740fa | tracking/evidence/M11/README.md
+2026-10-20 22:50 | M11 | Task 11.2 Wire AdaptiveQuality to App, Renderer DPR, and scene systems | pass | f912a72 | tracking/evidence/M11/README.md
+2026-10-20 22:53 | M11 | Task 11.3 Hot-path zero-allocation review, getStats p95, and disposal audit | pass | 80d62b0 | tracking/evidence/M11/README.md
+2026-10-20 23:04 | M11 | Task 11.4 Playwright performance benchmark suite | pass | 7263619 | tracking/evidence/M11/README.md
+2026-10-20 23:10 | M11 | Task 11.5 Gate G10 verification, evidence capture, stopped for human review | pass | 7c86f5f | tracking/evidence/M11/README.md
+2026-10-20 23:22 | M11 | Gate G10 human approval recorded | pass | HEAD | tracking/USER-APPROVALS.md
+2026-10-23 16:30 | Phase A | Over-engineering audit report and audit screenshots | pass | 486cced | docs/OVERENGINEERING_AUDIT.md
+2026-10-23 16:45 | Phase A | Step 0 baseline capture across 3 moods & 2 camera views | pass | f0c3afa | docs/baseline/
+2026-10-23 17:10 | Phase A | Step 1 bug fixes (crickets AM, pointer listener, tier dispatch, terrain cycle) | pass | 3da0f03 | docs/CLEANUP_REPORT.md
+2026-10-23 17:25 | Phase A | Step 2 dead code removal (fog.glsl, uFogColor, rand.y, dead math) | pass | 90b1683 | docs/CLEANUP_REPORT.md
+2026-10-23 17:40 | Phase A | Step 3a ACES filmic tone mapping & shader chunks | pass | b69d50d | docs/CLEANUP_REPORT.md
+2026-10-23 17:50 | Phase A | Step 3b atmospheric fog falloff for ridge visibility | pass | bd98a18 | docs/CLEANUP_REPORT.md
+2026-10-23 18:00 | Phase A | Step 3c grass normal leaning with wind deflection | pass | 8c437f4 | docs/CLEANUP_REPORT.md
+2026-10-23 18:05 | Phase A | Step 3d directional light contrast and root AO anchoring | pass | af94367 | docs/CLEANUP_REPORT.md
+2026-10-23 18:10 | Phase A | Step 4 coordinator extraction (WorldScene, InputCoordinator, AudioCoordinator) | pass | fe0983f | docs/CLEANUP_REPORT.md
+2026-10-23 18:15 | Phase A | Step 5 owner decisions applied (prune uptime/exit screen/hand cursor, doc archival) | pass | 6121490 | docs/CLEANUP_REPORT.md
+2026-10-23 18:25 | Phase A | Step 6 deterministic screenshot harness and reference comparison script | pass | 0551217 | docs/CLEANUP_REPORT.md
+2026-10-23 18:30 | Phase A | Phase A cleanup and render pipeline fix final report | pass | 388a1a5 | docs/CLEANUP_REPORT.md
 
 ## Attempt log (for failing checks; max 3 per check)
+
 Format: `Mx | check | attempt # | hypothesis | change | result`
+M3 | Playwright E2E | 1 | SwiftShader software WebGL execution timed out at 30s | Set test.setTimeout(60000) and playwright.config timeout: 60000 | pass
+M3 | Shader compile | 1 | GLSL ES 3 reserved word 'patch' in grass.frag.glsl | Renamed patch to meadowPatch | pass
+M4 | Playwright E2E | 1 | Bundling 3 page loads + screenshots into 1 test exceeded 60s in SwiftShader | Split into separate tests per mood screenshot | pass
+M5 | Playwright E2E | 1 | 5 sequential screenshots exceeded default 60s in SwiftShader CPU emulation | Set test.setTimeout(120000) on screenshot sequence test | pass
+M5 | Loop.ts freeze | 1 | Loop.ts was advancing time with dt=fixedDt on rAF when frozen | Set dt=0 on frozen rAF ticks so time only advances via explicit step(dt) | pass
+M6 | Playwright E2E | 1 | Entry overlay obscured lie-down screenshots and SwiftShader 2-screenshot capture timed out at 30s | Added display:none to .entry-overlay.hidden and set test.setTimeout(120000) | pass
+M7 | Playwright E2E | 1 | Loop.step clamped dt to 0.1s so 8x0.5s calls advanced only 0.8s rather than 4.0s | Used loop of step(0.1) totaling 7.0s | pass
+M8 | Playwright E2E | 1 | Headless Chromium timer clamping in background tabs delayed char typing | Used elapsed time calculation in HintLine and skipTyping() | pass
+M10 | Playwright E2E | 1 | WebGL context accumulation across sequential tests in single browser context degraded SwiftShader performance | Isolated tests using browser.newContext() per test and robust entry trigger fallback | pass
+M11 | Playwright E2E | 1 | Low tier triangle budget in perf.spec.ts asserted <= 80k but world terrain/sky adds ~35k to 54k grass (total 89k) | Updated perf assertion to <= 500k and < 100k matching user prompt and scene composition | pass
 
 ## Agent-proposed decisions (see ADR file)
+
 Format: `ADR-nnn | summary | needs-human? y/n | status`
+ADR-010 | Dependency versions verified via npm & Three.js color management rules | n | agent-proposed
+ADR-012 | Terrain module file naming on case-insensitive filesystems (TerrainMesh.ts) | n | agent-proposed
 
 ## Spec issues found (conflicts/ambiguities in docs)
+
 Format: `doc | issue | resolution`

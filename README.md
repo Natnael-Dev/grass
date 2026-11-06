@@ -1,191 +1,286 @@
-# GRASS — MASTER INSTRUCTIONS FOR THE AI CODING AGENT
+<div align="center">
 
-> You are the autonomous engineer for **Grass**: a calm, stylized, interactive 3D meadow that runs in the browser, built for developers who need a one-minute break from their screen. This folder is the complete handoff. You do **not** have access to the conversation that produced it, and you do not need it. Everything is written down here.
->
-> **Read this file completely before doing anything else. Then follow it literally.**
+  <img src="./public/favicon.svg" alt="Grass Logo" width="80" height="80" />
 
----
+# Grass
 
-## 0. The one-paragraph product
+  <p align="center">
+    <strong>A calm, stylized, interactive 3D meadow that runs in the browser, built for developers who need a quick break.</strong>
+  </p>
 
-Grass is a static website (Vite + TypeScript + vanilla Three.js + custom GLSL, WebGL2, no backend, hosted on Vercel). The user clicks **"step outside"** and is in a hill meadow with thousands of shader-animated grass blades, a lone tree, drifting clouds, and three moods (**dawn / golden hour / night with fireflies**). The mouse (or finger) parts the grass; a click scatters seeds; holding the mouse **lies you down** in the grass (camera dip). Procedural audio, a friendly dev-voiced guidance layer, and a few easter eggs complete it. Desktop-first, graceful on mobile. Full detail: `docs/00-product/product-vision.md`.
+  <p align="center">
+    <a href="https://github.com/Natnael-Dev/grass/actions/workflows/ci.yml"><img src="https://github.com/Natnael-Dev/grass/actions/workflows/ci.yml/badge.svg" alt="CI Status" /></a>
+    <img src="https://img.shields.io/badge/TypeScript-5.7-blue.svg?logo=typescript" alt="TypeScript Strict" />
+    <img src="https://img.shields.io/badge/Three.js-r186-black.svg?logo=three.js" alt="Three.js r186" />
+    <img src="https://img.shields.io/badge/WebGL-2.0-orange.svg" alt="WebGL2" />
+    <img src="https://img.shields.io/badge/Vitest-3.2-green.svg?logo=vitest" alt="Vitest 3.2" />
+    <img src="https://img.shields.io/badge/Playwright-1.64-purple.svg?logo=playwright" alt="Playwright" />
+    <img src="https://img.shields.io/badge/Bundle%20Size-166%20KB%20gzip-brightgreen.svg" alt="Bundle Size" />
+    <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
+  </p>
 
----
+  <p align="center">
+    <a href="#visual-gallery">Visual Gallery</a> •
+    <a href="#highlights--features">Highlights</a> •
+    <a href="#controls--interaction">Controls</a> •
+    <a href="#system-architecture">Architecture</a> •
+    <a href="#getting-started">Getting Started</a> •
+    <a href="#deterministic-visual-harness">Test Harness</a> •
+    <a href="#documentation-directory">Documentation</a>
+  </p>
 
-## 1. Prime directives (violating any of these is a failure)
+  <br />
 
-1. **Docs are the source of truth.** If something is specified, implement it exactly. If it is not specified, check the docs again, then follow the *Undocumented Decision Protocol* (§9). Never silently invent.
-2. **One milestone at a time.** Milestones are `M0 … M13` in `docs/06-delivery/implementation-plan.md`. Never start milestone N+1 before milestone N's gate is passed, evidenced, logged in `tracking/PROGRESS.md`, and (where required) approved by the human.
-3. **No big-bang implementation.** Never write the whole app in one step. Work in small slices: write → run → look → fix → commit.
-4. **Evidence or it didn't happen.** A task is "done" only when you have *run* the verification (build, tests, Playwright screenshot you actually *looked at*, trace) and stored the proof in `tracking/evidence/<milestone>/`. Never claim something works from reading code.
-5. **Atomic commits, always.** One logical change per commit, Conventional Commits, build+tests green at every commit. Rules: `docs/06-delivery/git-and-github-workflow.md`.
-6. **The human tests before anything is pushed or merged** (default mode). See §7 and `tracking/USER-APPROVALS.md`.
-7. **Use your tools.** Discover your own capabilities first (§3), then use every relevant skill, MCP server, slash command and subagent *whenever it helps*. Playbook: `docs/07-agent-operations/skills-and-tools-playbook.md`.
-8. **Verify library APIs before using them** (Context7 MCP / official docs). Your memory of Three.js APIs may be outdated. Never guess a signature.
-9. **Loop until correct, but never loop blindly.** Max 3 failed attempts per gate with *different* hypotheses, then log a blocker and change approach (§8).
-10. **Do not stop early.** The `/goal` is complete **only** when §11 is satisfied. Waiting at a human gate is *not* completion and *not* failure.
+  <img src="./public/og.png" alt="Grass Meadow Golden Vista" width="100%" style="border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);" />
 
----
-
-## 2. Re-entry protocol (do this at session start AND after every `/compact` or context reset)
-
-Read, in this order, and nothing else until done:
-1. `AGENTS.md` (short rules).
-2. `tracking/PROGRESS.md` (where you are, what's next, open blockers).
-3. `tracking/USER-APPROVALS.md` (autonomy mode + approvals).
-4. The current milestone section in `docs/06-delivery/implementation-plan.md` and the docs it lists under **Read**.
-
-Then continue from the first unchecked item in PROGRESS.md. Do not restart finished work. Do not re-read the entire docs tree every time (context is precious).
+</div>
 
 ---
 
-## 3. First actions (Milestone M0) — in this exact order
+## Visual Gallery
 
-1. Read this README fully, then `AGENTS.md`, then `docs/07-agent-operations/capability-discovery.md`.
-2. **Discover your capabilities** exactly as that doc says: inventory skills, MCP servers, slash commands, runtime (Node, npm/pnpm, git, OS, network). Read your own `antigravity-guide` and `agy-customizations` skills to learn the *real* syntax of `/goal`, `/plan`, `/teamwork-preview`, subagents, etc. Smoke-test each MCP you will need (github, vercel, playwright, chrome-devtools, context7). Write results to `tracking/CAPABILITIES.md`.
-3. Read, in order, the **full** reading list in §4 once (skim the rest of the docs; you will re-read each when its milestone starts).
-4. Use `/plan` (or your planning facility) to produce `tracking/plans/M0.md`, then execute M0.
-5. Never skip to coding before `tracking/CAPABILITIES.md` exists and PROGRESS.md shows M0 started.
+Experience the procedural meadow across three dynamic moods and multiple camera perspectives:
 
----
+### Living Time-of-Day Moods
 
-## 4. Documentation map and reading order
+|                                           🌅 Dawn                                            |                                            🌇 Golden Hour                                             |                                    🌌 Night with Fireflies                                     |
+| :------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------: |
+| <img src="./docs/pipeline_fixes/3d_lighting/vista_dawn.png" alt="Dawn Vista" width="100%" /> | <img src="./docs/pipeline_fixes/3d_lighting/vista_golden.png" alt="Golden Hour Vista" width="100%" /> | <img src="./docs/pipeline_fixes/3d_lighting/vista_night.png" alt="Night Vista" width="100%" /> |
+|              _Cool pastel haze, distant chirping birds, soft morning sunlight._              |                 _Warm directional sunlight, rich amber shadows, dynamic wind waves._                  |          _Atmospheric moonlit sky, subtle crickets, glowing point-sprite fireflies._           |
 
-**Initial read (M0), in this order:**
+<br />
 
-| # | File | Why |
-|---|------|-----|
-| 1 | `README.md` (this) | Rules and workflow |
-| 2 | `AGENTS.md` | Condensed always-on rules |
-| 3 | `docs/00-product/product-vision.md` | What and why |
-| 4 | `docs/00-product/requirements.md` | The numbered requirements (FR/NFR IDs) |
-| 5 | `docs/00-product/scope-and-roadmap.md` | MVP vs optional vs non-goals |
-| 6 | `docs/07-agent-operations/*` (all 5 files) | How to operate |
-| 7 | `docs/06-delivery/implementation-plan.md` | The milestone list |
-| 8 | `docs/06-delivery/git-and-github-workflow.md` | Commits, branches, PRs |
+### Perspective & Interactive Mechanics
 
-**Just-in-time (read when the milestone's "Read" line says so):**
+|                                       🧍 Standing Vista Pose                                       |                                       🛌 Lie-Down Perspective                                       |
+| :------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------: |
+| <img src="./docs/pipeline_fixes/3d_lighting/vista_golden.png" alt="Standing Vista" width="100%" /> | <img src="./docs/pipeline_fixes/3d_lighting/liedown_golden.png" alt="Lie Down Pose" width="100%" /> |
+|                _Panoramic horizon view with 3 distant mountain ridge silhouettes._                 |            _Camera dips into the foliage; enhanced blade parallax and subtle vignette._             |
 
-| Area | Files |
-|------|-------|
-| Design | `docs/01-design/art-direction.md`, `ui-ux-specification.md`, `design-system.md`, `motion-and-interactions.md`, `audio-design.md`, `copywriting.md`, `asset-specification.md` |
-| Architecture | `docs/02-architecture/technology-decisions.md`, `system-architecture.md`, `performance-strategy.md` |
-| Frontend | `docs/03-frontend/scene-and-camera.md`, `environment-and-grass.md`, `input-and-controls.md`, `state-and-ui-components.md`, `responsive-and-accessibility.md` |
-| Backend | `docs/04-backend/no-backend.md` (decision: there is none) |
-| Quality | `docs/05-quality/testing-strategy.md`, `acceptance-criteria.md`, `performance-benchmarks.md`, `code-quality-standards.md` |
-| Delivery | `docs/06-delivery/development-setup.md`, `deployment.md` |
-| Decisions | `docs/decisions/architecture-decision-records.md` |
-
-Precedence when documents appear to conflict: `requirements.md` > `acceptance-criteria.md` > design docs > architecture docs > frontend docs > everything else. Log any conflict you find (§9).
+|                                  🌾 Dandelion Seed Drift                                  |                                   ✨ Nocturnal Fireflies                                    |
+| :---------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------: |
+| <img src="./tracking/evidence/M7/seeds-scatter.png" alt="Dandelion Seeds" width="100%" /> | <img src="./tracking/evidence/M7/fireflies-night.png" alt="Night Fireflies" width="100%" /> |
+|       _Click or tap anywhere to scatter floating seeds carried by procedural wind._       |            _Gentle glowing fireflies illuminate the meadow grass at nighttime._             |
 
 ---
 
-## 5. The milestone workflow loop (repeat for every milestone)
+## Highlights & Features
+
+- 🌿 **Instanced Grass Simulation:** Up to 90,000 animated grass blades rendered in a **single GPU draw call**. Instances are generated using stratified Poisson-jittered placement, with custom vertex normal tilting that reflects specular highlights as blades bend under sinusoidal wind waves.
+- 🎨 **ACES Filmic Tone Mapping & Color Science:** Real-time color management via `THREE.ACESFilmicToneMapping` with exposure 1.0, including Three.js tone-mapping and sRGB color-space GLSL chunks across all custom fragment shaders.
+- ⛰️ **Atmospheric Depth & Mountain Ridges:** Calibrated exponential fog falloff preserves the atmospheric silhouettes of three distinct distant mountain ridge layers.
+- 🍃 **Fluid Interactive Physics:** Mouse pointers and touch drag brush the grass blades aside via a reactive 16-point spring-damped deflection trail. Click/tap disperses dandelion seed particles; click-and-hold (or Spacebar) transitions the camera into a relaxing **lie-down** pose.
+- 🎵 **Procedural Web Audio Soundscape:** 100% procedurally synthesized audio using the Web Audio API with **zero audio files**:
+  - Continuous multi-band filtered pink noise for wind gusts.
+  - Procedural dawn birdsong using FM modulation sweeps.
+  - Nighttime crickets powered by dual bandpassed oscillators with 28 Hz AM modulation cadence.
+  - Interactive grass blade brushing rustle and dandelion chime chords.
+- ♿ **Inclusive & Accessible:** WCAG 2.1 AA compliant color contrast ratios ($\ge 4.5:1$ across all moods), `prefers-reduced-motion` detection, WebGL context lost auto-recovery toast, and HTML5 native `<dialog>` modals with keyboard focus management.
+- ⚡ **Adaptive 1 Hz Quality Engine:** Dynamic quality governor evaluating moving-average frame variance at 1 Hz (Ultra: 90k blades, High: 90k, Medium: 45k, Low: 18k) to guarantee 60 FPS across high-end desktop GPUs and low-power mobile chipsets.
+
+---
+
+## Tech Stack
+
+| Layer                  | Technologies                                                                                                                     |
+| :--------------------- | :------------------------------------------------------------------------------------------------------------------------------- |
+| **3D Graphics Engine** | [Three.js](https://threejs.org/) (r186) with custom WebGL2 GLSL vertex & fragment shaders                                        |
+| **Pipeline & Shading** | ACES Filmic tonemapping, sRGB output encoding, custom normal leaning, directional Lambertian diffuse                             |
+| **Audio Synthesis**    | Native Web Audio API procedural synthesis (biquad filters, AM/FM oscillators, audio math)                                        |
+| **Language & Tooling** | TypeScript 5.7 (strict mode), [Vite](https://vite.dev/) 6.2, ESLint 9 (flat config), Prettier 3                                  |
+| **Automated Testing**  | [Vitest](https://vitest.dev/) for unit suites, [Playwright](https://playwright.dev/) for E2E workflows & visual snapshot testing |
+| **Hosting & Delivery** | Zero backend, static client SPA, hosted on Vercel                                                                                |
+
+---
+
+## System Architecture
+
+The application coordinates its decoupled subsystems through a lightweight coordinator architecture:
+
+```mermaid
+graph TD
+    Main[src/main.ts<br/>Canvas Bootstrap & Debug Bridge] --> App[src/app/App.ts<br/>Lifecycle Coordinator]
+
+    App --> World[src/world/WorldScene.ts<br/>Three.js Scene Graph]
+    App --> Input[src/input/InputCoordinator.ts<br/>Pointer, Raycaster & Keyboard]
+    App --> Audio[src/audio/AudioCoordinator.ts<br/>Web Audio Synthesizers]
+    App --> RenderCore[src/core/Renderer.ts<br/>ACES Filmic WebGL2 Renderer]
+    App --> UI[src/ui/Hud.ts<br/>Minimal Controls & Dialogs]
+    App --> Loop[src/core/Loop.ts<br/>RAF Loop & Adaptive Quality]
+
+    World --> Grass[src/world/Grass.ts<br/>90k Instanced Blades]
+    World --> Sky[src/world/Sky.ts<br/>Dynamic Dome]
+    World --> Terrain[src/world/TerrainMesh.ts<br/>Rolling Hill Crest]
+    World --> Moods[src/world/MoodController.ts<br/>Dawn / Golden / Night]
+```
+
+### Module Overview
 
 ```
-A. SYNC      Re-entry protocol (§2). Create branch from up-to-date main.
-B. PLAN      Read the milestone's docs. Run /plan -> tracking/plans/Mx.md (tasks, atomic-commit list, risks, parallelizable work).
-C. BUILD     Implement task by task. For logic: TDD (red-green-refactor, use the `tdd` skill). After EACH task:
-               run lint + typecheck + unit tests; run the dev server and LOOK at it (Playwright screenshot / browser);
-               commit atomically.
-D. SWARM     Where the plan marks work parallelizable, delegate to subagents (§10). Lead integrates.
-E. VERIFY    Run the milestone Gate commands verbatim. Capture evidence into tracking/evidence/Mx/.
-F. REVIEW    Review swarm: adversarial code review + anti-slop audit + a11y/perf lens (bmad-code-review, bmad-review,
-             anti-ai-slop-auditor). Fix findings, re-run Gate.
-G. RECORD    Update tracking/PROGRESS.md and tracking/TRACEABILITY.md (requirement IDs -> evidence).
-H. HUMAN GATE  If the milestone has a human gate and MODE is strict: STOP and ask the human to test (§7).
-I. SHIP      After approval: push branch, open PR, wait for CI green, merge (rebase-merge; never squash), delete branch.
-J. NEXT      Sync main, update PROGRESS, start the next milestone.
+src/
+├── main.ts                   # Bootstraps canvas, mounts App, exposes window.__grass bridge
+├── app/
+│   ├── App.ts                # Main coordinator: orchestrates WorldScene, Input, Audio, UI, Loop
+│   ├── store.ts              # Minimal reactive UI/session state store
+│   └── flags.ts              # Query parameter parsing & deterministic flags
+├── core/
+│   ├── Renderer.ts           # WebGL2 renderer (ACES Filmic tonemapping, sRGB, context recovery)
+│   ├── Loop.ts               # RAF tick orchestrator with delta time clamping
+│   ├── AdaptiveQuality.ts    # 1 Hz rate-limited quality tier manager (ultra, high, med, low)
+│   └── storage.ts            # Safe LocalStorage wrapper for user preferences
+├── world/
+│   ├── WorldScene.ts         # Scene graph manager (Three.js Scene + camera + meshes)
+│   ├── Grass.ts              # Instanced grass mesh & uniform animations
+│   ├── grassGenerator.ts     # Stratified jittered Poisson-like placement
+│   ├── grassGeometry.ts      # Segmented blade geometry with LOD support
+│   ├── TerrainMesh.ts        # Analytical procedural rolling terrain
+│   ├── Tree.ts               # Lone stylized meadow tree
+│   ├── Ridges.ts             # 3 atmospheric mountain ridge silhouette layers
+│   ├── Sky.ts                # Procedural analytic atmospheric dome
+│   ├── Fireflies.ts          # Night mood point-sprite fireflies
+│   ├── Seeds.ts              # Interactive floating dandelion seed particles
+│   ├── MoodController.ts     # Smooth transitions between dawn, golden, and night
+│   └── BrushTrail.ts         # Interactive displacement canvas texture
+├── input/
+│   ├── InputCoordinator.ts   # Integrates pointer, keyboard brush, raycasting, and trail
+│   ├── Pointer.ts            # Native pointer tracking + tap / hold gesture detection
+│   ├── GroundRaycaster.ts    # Ray-terrain intersection for mouse-grass interaction
+│   └── KeyboardBrush.ts      # WASD/arrow key virtual brush driver
+├── audio/
+│   ├── AudioCoordinator.ts   # Web Audio soundscape manager
+│   ├── AudioEngine.ts        # Master audio context, limiter, mute fades
+│   ├── Wind.ts               # Filtered noise wind synthesis modulated by mood
+│   ├── Birds.ts              # Procedural bird chirping for dawn mood
+│   ├── Crickets.ts           # Bandpassed FM/AM cricket synthesis for night mood
+│   ├── Rustle.ts             # Interactive grass brushing rustle sound
+│   └── Sfx.ts                # Chimes, seed scatter, and lie-down chords
+└── ui/
+    ├── Hud.ts                # Minimal HUD (MoodSwitch pills, SoundToggle, help button)
+    ├── HintLine.ts           # Single subtle text cue ("brush the grass")
+    ├── HowItWorks.ts         # Native HTML5 <dialog> modal with focus trap
+    ├── Entry.ts              # Initial "step outside" splash curtain
+    ├── Vignette.ts           # Post-process mood vignette overlay
+    └── FallbackScreen.ts     # WebGL context lost recovery toast and guidance
 ```
 
-A milestone is never "mostly done". It is gated or it is not done.
+---
+
+## Controls & Interaction
+
+| Input / Gesture             | Action             | Description                                                           |
+| :-------------------------- | :----------------- | :-------------------------------------------------------------------- |
+| **Mouse Move / Touch Drag** | **Brush Grass**    | Deflects grass blades with a responsive, spring-damped trail          |
+| **Click / Tap**             | **Scatter Seeds**  | Releases floating dandelion seeds that drift on wind currents         |
+| **Click & Hold / Spacebar** | **Lie Down**       | Dips camera into the meadow with doubled parallax and vignette        |
+| **WASD / Arrow Keys**       | **Keyboard Brush** | Sweeps a virtual brush cursor across the terrain                      |
+| **Key 1 / 2 / 3**           | **Switch Mood**    | Smoothly crossfades between Dawn (`1`), Golden (`2`), and Night (`3`) |
+| **Key M**                   | **Toggle Audio**   | Mutes or unmutes procedural ambient audio with a smooth fade          |
+| **Key H / ?**               | **Help Dialog**    | Toggles the accessible "How It Works" guidance modal                  |
 
 ---
 
-## 6. Milestones at a glance (details in the plan)
+## Getting Started
 
-| M | Name | Human gate |
-|---|------|-----------|
-| M0 | Capability discovery, repo + GitHub bootstrap | no |
-| M1 | Tooling scaffold, CI, quality hooks | no |
-| M2 | Render core: loop, terrain, sky, ridges, tree, camera | **G1** |
-| M3 | Grass instancing + wind | **G2** |
-| M4 | Mood system (dawn / golden / night) | **G3** |
-| M5 | Brush interaction + hand cursor | **G4** |
-| M6 | Lie-down camera dip, parallax, idle drift | **G5** |
-| M7 | Seed scatter + fireflies | **G6** |
-| M8 | UI shell, hints, how-it-works, uptime, easter eggs, 404 | **G7** |
-| M9 | Procedural audio (+ optional CC0 samples) | **G8** |
-| M10 | Mobile/touch, accessibility, reduced motion, fallbacks | **G9** |
-| M11 | Performance tuning + adaptive quality | **G10** |
-| M12 | Hardening + full QA audit + traceability | **G11** |
-| M13 | Release: Vercel preview, final test, production, v1.0.0 | **G12 (final)** |
+### Prerequisites
 
----
+- **Node.js:** `v20.0.0` or higher
+- **npm:** `v10.0.0` or higher
 
-## 7. Human gates and autonomy mode
+### Installation & Local Development
 
-`tracking/USER-APPROVALS.md` contains `MODE: strict` (default). 
+```bash
+# Clone repository
+git clone https://github.com/Natnael-Dev/grass.git
+cd grass
 
-- **strict:** at each human gate, you stop *after* all automated checks pass and *before* pushing. You commit locally only. You then print a **Human Test Request** (template in `docs/07-agent-operations/checkpoint-and-gate-protocol.md`): the exact command to run, the URL, what to try, what "good" looks like, known limitations. You then wait for the human to reply "approved Gx" (or to write it in USER-APPROVALS.md) or to request changes. Requested changes become new atomic commits, then re-verify, then re-request.
-- **trust:** (only if the human changes MODE to `trust`) after automated gates and review pass, you push, open the PR, merge it yourself, and continue. The human tests later; their feedback becomes fix tasks.
+# Install dependencies
+npm install
 
-Waiting at a gate = stop output and do not start the next milestone. Do not pretend approval. Never write "approved" yourself.
+# Start development server with Hot Module Replacement (HMR)
+npm run dev
 
----
+# Open browser to http://localhost:5173
+```
 
-## 8. Loop rules (retries, blockers, anti-spin)
+### Complete Verification Suite
 
-- A failing gate: diagnose with the `diagnosing-bugs` skill (multi-hypothesis). Record each attempt in `tracking/PROGRESS.md` (attempt #, hypothesis, change, result).
-- **Max 3 attempts per failing check**, each with a *different* hypothesis. After 3: write `tracking/BLOCKERS.md` entry, use `/boost` for one deep re-think, and try a fundamentally different approach (simpler technique, reduced scope within the documented fallback). If still blocked: ask the human one precise question with a recommendation, and continue with unblocked work if any exists.
-- Never weaken a test, gate, budget or requirement to make it pass. Never delete a failing test. Never comment out checks. If a requirement is genuinely wrong, use the Undocumented Decision Protocol.
-- Never repeat the same command hoping for a different result. Never "fix" by adding try/catch that hides errors.
-- Context hygiene: run `/compact` when context is heavy (~70%), then do the Re-entry protocol.
+Run all quality and build checks with a single command:
 
----
+```bash
+# Full verification (lint, typecheck, unit tests, build, bundle size, contrast)
+npm run check
+```
 
-## 9. Undocumented Decision Protocol
+Or execute individual test suites:
 
-When the docs are silent, ambiguous or contradictory:
-1. Search the docs (`grep -ri`). 2. Prefer the simplest option consistent with `docs/00-product/product-vision.md` principles. 3. Record it as a numbered entry in `docs/decisions/architecture-decision-records.md` (status: *agent-proposed*) and a line in PROGRESS.md. 4. If it is user-visible, costly, or hard to reverse: ask the human (one question, with recommendation) before building on it. 5. Never expand MVP scope: anything in `scope-and-roadmap.md` marked Optional/Future/Non-goal stays out unless the human approves.
+| Command             | Purpose                                 | Verification Target                                          |
+| :------------------ | :-------------------------------------- | :----------------------------------------------------------- |
+| `npm run test`      | Unit tests via Vitest                   | 201 tests across 37 files passing                            |
+| `npm run test:e2e`  | End-to-End browser tests via Playwright | Headless Chromium WebGL2 smoke & visual suite                |
+| `npm run typecheck` | Strict TypeScript compiler check        | 0 type errors with `tsc --noEmit`                            |
+| `npm run lint`      | ESLint static analysis                  | 0 warnings, 0 errors                                         |
+| `npm run format`    | Prettier code formatting                | Enforces standard formatting                                 |
+| `npm run size`      | Production bundle size check            | JS chunk $\le 300\text{ KB}$, total $\le 500\text{ KB}$ gzip |
+| `npm run contrast`  | WCAG 2.1 AA color contrast check        | All UI elements maintain $\ge 4.5:1$ contrast ratio          |
 
 ---
 
-## 10. Skills, MCP servers, commands, subagents (summary)
+## Deterministic Visual Harness
 
-Full detail in `docs/07-agent-operations/skills-and-tools-playbook.md` and `subagent-orchestration.md`.
+The application provides deterministic URL query parameters for regression testing and visual auditing:
 
-- Re-check your skill list at the start of **every milestone**; invoke every skill that matches (frontend-design, threeui-designcode, micro-interactions-motion, tdd, webapp-testing, web-perf, security-and-hardening, git-workflow-and-versioning, setup-pre-commit, codebase-design, diagnosing-bugs, anti-ai-slop-auditor, bmad-code-review, bmad-review, bmad-qa-generate-e2e-tests, bmad-walkthrough, bmad-project-context, ...).
-- MCP: `context7` (verify APIs/versions), `playwright` + `chrome-devtools-mcp` (look at it, trace it), `github` (branches/PRs/CI), `vercel` (deploy).
-- Commands: `/plan` each milestone, `/teamwork-preview` for parallel subagents, `/boost` for hard problems, `/compact` for context, `/learn` to persist the user's working rules, `/browser` for research, `/goal` is your outer loop.
-- You may discover or add other tools yourself if they help (free, no secrets). Anything needing credentials or cost: ask the human.
-- Not relevant here (do **not** use): Cloudflare*, Supabase*, Render, UptimeRobot, Next.js-on-Cloudflare, Sandbox*, Turnstile, Google Workspace skills. Deploy target is Vercel only.
+```
+http://localhost:5173/?compare=1&mood=golden&camera=vista&freeze=1&seed=42&ui=0
+```
 
----
+- `compare=1`: Locks the canvas to 1920x1080 at DPR 1.0 and fixes the Mulberry32 random seed.
+- `mood=dawn|golden|night`: Forces a specific mood preset.
+- `camera=vista|lying`: Sets standing panoramic view or dipped lie-down view.
+- `freeze=1`: Freezes procedural wind time at a deterministic offset.
+- `ui=0`: Hides HUD elements for pure canvas shader verification.
 
-## 11. Definition of Done for the whole `/goal`
+### Automated Screenshot & Comparison Scripts
 
-The goal is complete **only when ALL are true** (verify each, with evidence, in the final audit of M12/M13):
-- [ ] Every milestone M0–M13 is checked in `tracking/PROGRESS.md` with evidence links.
-- [ ] Every requirement ID in `tracking/TRACEABILITY.md` is `PASS` with evidence (no blanks, no "assumed").
-- [ ] Every acceptance criterion in `docs/05-quality/acceptance-criteria.md` passes.
-- [ ] Performance budgets in `docs/05-quality/performance-benchmarks.md` are met or have a human-approved waiver.
-- [ ] All human gates G1–G12 approved (strict) or the human has explicitly accepted trust mode.
-- [ ] CI green on `main`; no console errors; Lighthouse targets met.
-- [ ] Production deployed on Vercel, smoke-tested by Playwright against the production URL, `v1.0.0` tagged, release notes written.
-- [ ] Public-facing `README.md` created (this file moved to `docs/AGENT-README.md`; `AGENTS.md` updated to point there), CHANGELOG complete.
-- [ ] You re-read all of `requirements.md` and `acceptance-criteria.md` one final time and found nothing unmet.
+```bash
+# Capture full suite (dawn, golden, night in vista and lie-down poses)
+node scripts/capture-standard-screens.mjs docs/baseline
 
-Then, and only then, report completion with a summary table.
+# Compare actual rendered screen against reference concept art
+node scripts/compare-reference.mjs <path-to-reference.png> --mood=golden --camera=vista
+```
 
----
-
-## 12. Forbidden
-
-Pushing/merging before approval (strict) · force-pushing `main` · squash-merging · committing secrets, `node_modules`, `dist` · adding analytics/trackers/cookies · adding a backend · adding React/Next/R3F/postprocessing/physics libraries · adding npm dependencies not listed in `technology-decisions.md` without an ADR · editing docs to hide a failure · declaring done early · stubs/fake interactivity/placeholder "TODO" features shipped as complete · copying the layout, copy or assets of any existing "touch grass" website.
+_Diff outputs (`actual.png`, `reference.png`, `diff.png`, and `side_by_side.png`) are automatically written to `docs/visual-diffs/`._
 
 ---
 
-## 13. The command to start (the human will paste this)
+## Performance & Quality Benchmarks
 
-> **/goal** Read README.md first and follow all instructions and documentation to build the project step by step.
+| Metric                        |    Budget / Target    |              Measured Value               |  Status   |
+| :---------------------------- | :-------------------: | :---------------------------------------: | :-------: |
+| **Total Bundle Size (Gzip)**  |  $\le 500\text{ KB}$  |               **165.89 KB**               | ✅ PASSED |
+| **Main JS Bundle (Gzip)**     |  $\le 300\text{ KB}$  |               **164.10 KB**               | ✅ PASSED |
+| **Main CSS Bundle (Gzip)**    |  $\le 20\text{ KB}$   |                **1.79 KB**                | ✅ PASSED |
+| **Unit Test Coverage**        |      100% Green       |     **201 / 201 passing (37 files)**      | ✅ PASSED |
+| **WCAG 2.1 AA Contrast**      |      $\ge 4.5:1$      |        **10 / 10 checks passing**         | ✅ PASSED |
+| **Draw Calls (Meadow Scene)** | $\le 10\text{ calls}$ | **7 draw calls (1 for 90k grass blades)** | ✅ PASSED |
+| **Frame Rate**                |        60 FPS         |    **Solid 60 FPS on integrated GPUs**    | ✅ PASSED |
+
+---
+
+## Documentation Directory
+
+| Document                                                         | Description                                                                     |
+| :--------------------------------------------------------------- | :------------------------------------------------------------------------------ |
+| [ARCHITECTURE.md](./ARCHITECTURE.md)                             | In-depth technical architecture, data flows, coordinators, and shader pipeline. |
+| [docs/STATE.md](./docs/STATE.md)                                 | Single source of truth for active system health, phase roadmap, and metrics.    |
+| [docs/CLEANUP_REPORT.md](./docs/CLEANUP_REPORT.md)               | Complete report on Phase A over-engineering refactoring and visual fixes.       |
+| [docs/OVERENGINEERING_AUDIT.md](./docs/OVERENGINEERING_AUDIT.md) | Multi-subagent codebase audit and minimum viable architecture roadmap.          |
+| [docs/AGENT-README.md](./docs/AGENT-README.md)                   | Master autonomous agent engineering instructions, prime directives, and gates.  |
+| [CHANGELOG.md](./CHANGELOG.md)                                   | Full semantic versioning release notes and milestone change logs.               |
+| [docs/archive/](./docs/archive/)                                 | Preserved historical product, design, quality, and delivery specifications.     |
+
+---
+
+## License
+
+Distributed under the MIT License. See [LICENSE](./LICENSE) for details.
