@@ -1,8 +1,8 @@
 # PROGRESS — the agent's live log (update after EVERY task and gate)
 
-**Current milestone:** M12 (Hardening + full QA audit + traceability — G11)
-**Current state:** ready for M12 planning
-**Last updated:** 2026-10-20 23:22
+**Current milestone:** Phase A Cleanup & Render-Pipeline Fix Complete
+**Current state:** Ready for Phase B Visual Polish & Texture Atlas
+**Last updated:** 2026-11-06 08:50
 **Open blockers:** none
 
 ## Milestone checklist
@@ -21,8 +21,9 @@ Mark `[x]` only when the gate passed AND evidence exists AND (strict mode) the h
 - [x] M9 Audio (G8) — evidence: tracking/evidence/M9/
 - [x] M10 Mobile/a11y/fallbacks (G9) — evidence: tracking/evidence/M10/README.md
 - [x] M11 Performance + adaptive quality (G10) — evidence: tracking/evidence/M11/README.md
-- [ ] M12 Hardening + QA audit (G11)
-- [ ] M13 Release (G12)
+- [x] Phase A Over-engineering audit & render-pipeline cleanup — report: docs/CLEANUP_REPORT.md
+- [ ] Phase B Visual redesign, texture atlas & flower quads (G11)
+- [ ] Release v1.0.0 (G12)
 
 ## Task log (append-only; newest at bottom)
 
@@ -82,6 +83,18 @@ Format: `YYYY-MM-DD HH:MM | Mx | task | result | commit-sha | evidence-path`
 2026-10-20 23:04 | M11 | Task 11.4 Playwright performance benchmark suite | pass | 7263619 | tracking/evidence/M11/README.md
 2026-10-20 23:10 | M11 | Task 11.5 Gate G10 verification, evidence capture, stopped for human review | pass | 7c86f5f | tracking/evidence/M11/README.md
 2026-10-20 23:22 | M11 | Gate G10 human approval recorded | pass | HEAD | tracking/USER-APPROVALS.md
+2026-10-23 16:30 | Phase A | Over-engineering audit report and audit screenshots | pass | 486cced | docs/OVERENGINEERING_AUDIT.md
+2026-10-23 16:45 | Phase A | Step 0 baseline capture across 3 moods & 2 camera views | pass | f0c3afa | docs/baseline/
+2026-10-23 17:10 | Phase A | Step 1 bug fixes (crickets AM, pointer listener, tier dispatch, terrain cycle) | pass | 3da0f03 | docs/CLEANUP_REPORT.md
+2026-10-23 17:25 | Phase A | Step 2 dead code removal (fog.glsl, uFogColor, rand.y, dead math) | pass | 90b1683 | docs/CLEANUP_REPORT.md
+2026-10-23 17:40 | Phase A | Step 3a ACES filmic tone mapping & shader chunks | pass | b69d50d | docs/CLEANUP_REPORT.md
+2026-10-23 17:50 | Phase A | Step 3b atmospheric fog falloff for ridge visibility | pass | bd98a18 | docs/CLEANUP_REPORT.md
+2026-10-23 18:00 | Phase A | Step 3c grass normal leaning with wind deflection | pass | 8c437f4 | docs/CLEANUP_REPORT.md
+2026-10-23 18:05 | Phase A | Step 3d directional light contrast and root AO anchoring | pass | af94367 | docs/CLEANUP_REPORT.md
+2026-10-23 18:10 | Phase A | Step 4 coordinator extraction (WorldScene, InputCoordinator, AudioCoordinator) | pass | fe0983f | docs/CLEANUP_REPORT.md
+2026-10-23 18:15 | Phase A | Step 5 owner decisions applied (prune uptime/exit screen/hand cursor, doc archival) | pass | 6121490 | docs/CLEANUP_REPORT.md
+2026-10-23 18:25 | Phase A | Step 6 deterministic screenshot harness and reference comparison script | pass | 0551217 | docs/CLEANUP_REPORT.md
+2026-10-23 18:30 | Phase A | Phase A cleanup and render pipeline fix final report | pass | 388a1a5 | docs/CLEANUP_REPORT.md
 
 ## Attempt log (for failing checks; max 3 per check)
 
