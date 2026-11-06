@@ -86,3 +86,11 @@ node scripts/capture-standard-screens.mjs <output-dir>
 ```
 
 This spins up an in-process Vite preview server, loads the application with `?compare=1&freeze=1&seed=42`, snapshots all moods and camera angles at 1920x1080 (DPR 1), and measures performance across quality tiers.
+
+---
+
+## 4. Related Documentation
+
+- [README.md](./README.md) — Project overview, controls, and developer setup.
+- [docs/STATE.md](./docs/STATE.md) — Active system health, verified benchmarks, and roadmap.
+- [docs/CLEANUP_REPORT.md](./docs/CLEANUP_REPORT.md) — Comprehensive Phase A refactoring and render fix report.

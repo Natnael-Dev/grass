@@ -10,6 +10,6 @@
 
 - [ ] atomic commits, conventional messages
 - [ ] lint, typecheck, unit, e2e green
-- [ ] docs/ADR updated if behavior or decisions changed
+- [ ] docs/STATE.md, ARCHITECTURE.md, or ADR updated if behavior changed
 - [ ] human gate Gx approved (link/quote)
 - [ ] no TODO/FIXME without ADR
